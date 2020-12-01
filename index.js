@@ -1,4 +1,5 @@
 
+"use strict";
 console.log(addNumbers(3,4))
 
 // Setting up 3d scene
@@ -45,16 +46,21 @@ function onMouseMove( event ) {
 	mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
 	mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
 }
+var miniCubeIsMoving = false;
+var miniCube1;
+
+
 
 function onMouseDown(event){
     raycaster.setFromCamera( mouse, camera );
 	const intersects = raycaster.intersectObjects( scene.children );
 	for ( let i = 0; i < intersects.length; i ++ ) {
 
-        hitCube = intersects[ i ].object;
-        hitPos = hitCube.position;
+        var hitCube = intersects[ i ].object;
+        var hitPos = hitCube.position;
         someDeleteFunction(hitCube);
-        miniCube1 = addCube(0.3,0.3,0.3, hitPos)
+        miniCube1 = addCube(0.3,0.3,0.3, hitPos);
+        miniCubeIsMoving = true;
     }
 }
 
@@ -62,7 +68,7 @@ window.addEventListener( 'mousemove', onMouseMove, false );
 window.addEventListener( 'mousedown', onMouseDown, false );
 
 
-cube = addCube(1, 1, 1, new THREE.Vector3(2, 1, -5));
+var cube = addCube(1, 1, 1, new THREE.Vector3(2, 1, -5));
 const raycaster = new THREE.Raycaster();
 // Main loop
 function renderMain() {
@@ -71,6 +77,10 @@ function renderMain() {
     cube.rotation.x += 0.04;
     // //  cube.rotation.y += 0.02;
     // //  cube.rotation.z += 0.01;
-	renderer.render( scene, camera );
+    if(miniCubeIsMoving){
+        miniCube1.position.x += 0.1;
+    }
+    renderer.render( scene, camera );
+    
 }
 renderMain()
