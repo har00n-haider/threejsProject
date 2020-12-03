@@ -32,6 +32,7 @@ var OrbitControls = require("three-orbit-controls")(THREE);
 
 
 function main() {
+  // Setup
   const canvas = document.querySelector("#c");
   const renderer = new THREE.WebGLRenderer({ canvas });
   const fov = 45;
@@ -39,20 +40,15 @@ function main() {
   const near = 0.1;
   const far = 1000;
   const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-
   globals.canvas = canvas;
   globals.camera = camera;
-
   camera.position.set(0, 40, 80);
-
   const controls = new OrbitControls(camera, canvas);
   controls.enableKeys = false;
   controls.target.set(0, 5, 0);
   controls.update();
-
   const scene = new THREE.Scene();
   scene.background = new THREE.Color("white");
-
   function addLight(...pos) {
     const color = 0xffffff;
     const intensity = 1;
@@ -61,7 +57,6 @@ function main() {
     scene.add(light);
     scene.add(light.target);
   }
-
   addLight(5, 5, 2);
   addLight(-5, 5, 5);
 
