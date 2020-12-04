@@ -1,11 +1,13 @@
 
-import GameObjectManager from "./src/game/GameObjectManager.js"
 import globals from "./src/globals.js";
 import * as THREE from "../lib/three.module.js";
-import {resizeRendererToDisplaySize} from "./src/utils/utils.js"
+import GameObjectManager from "./src/game/GameObjectManager.js";
+import Kube from "./src/game/Kube.js"
+import { Vector3 } from "./lib/three.module.js";
+import { resizeRendererToDisplaySize } from "./src/utils/utils.js";
 
 
-// Initial setup
+// Initial seup of scene, camera and lights
 const canvas = document.querySelector("#c");
 const renderer = new THREE.WebGLRenderer({ canvas });
 const fov = 45;
@@ -15,12 +17,8 @@ const far = 1000;
 const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 globals.canvas = canvas;
 globals.camera = camera;
-camera.position.set(0, 40, 80);
-// // Orbit controls - TODO: need to fix the way it is imported
-// const controls = new OrbitControls(camera, canvas);
-// controls.enableKeys = false;
-// controls.target.set(0, 5, 0);
-// controls.update();
+camera.position.set(0, 5, 10);
+camera.lookAt(new Vector3(0,0,0))
 const scene = new THREE.Scene();
 scene.background = new THREE.Color("grey");
 function addLight(...pos) {
@@ -33,38 +31,42 @@ function addLight(...pos) {
 }
 addLight(5, 5, 2);
 addLight(-5, 5, 5);
-
-
-// Initialise
+    
+// Initialise game objects
 globals.gameObjectManager = new GameObjectManager();
 
-globals.gameObjectManager.createGameObject(
+// Setting up camera object
+const gameObject = globals.gameObjectManager.createGameObject(
     camera,
     "camera",
     globals
 );
 
-// globals.gameObjectManager.createGameObject()
-
-
+// Setting up cubes
+function addCube(x, y, z){
+    var geometry = new THREE.BoxGeometry( x, y, z)
+    var material = new THREE.MeshStandardMaterial( { color: 0x0000ff })
+    var cube = new THREE.Mesh ( geometry, material )
+    return cube;
+}
+var newCube = addCube(2,2,2)
+var kubeGo = globals.gameObjectManager.createGameObject(
+    scene,
+    "Kube",
+    globals
+);
+kubeGo.addComponent(Kube, newCube)
 
 // Main render loop
-let then = 0;
 function render(now) {
-    // convert to seconds
-    globals.time = now * 0.001;
-    // make sure delta time isn't too big.
-    globals.deltaTime = Math.min(globals.time - then, 1 / 20);
-    then = globals.time;
+    
     if (resizeRendererToDisplaySize(renderer)) {
         const canvas = renderer.domElement;
         camera.aspect = canvas.clientWidth / canvas.clientHeight;
         camera.updateProjectionMatrix();
-    }
+      }
     globals.gameObjectManager.update();
     renderer.render(scene, camera);
-
-    console.log(globals.time);
     requestAnimationFrame(render);
 }
 requestAnimationFrame(render);

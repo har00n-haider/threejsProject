@@ -10,7 +10,7 @@ class GameObject {
     this.transform.name = name;
     this.parent = parent;
     this.globals = globals;
-    parent.add(this.transform);
+    parent.add(this.transform); // Top level object is the scene itself
   }
 
   addComponent(ComponentType, ...args) {

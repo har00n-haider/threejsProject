@@ -10,9 +10,12 @@
             "name": "Launch Chrome against localhost",
             "url": "http://127.0.0.1:8080",
             "webRoot": "${workspaceFolder}",
-            // Disable chrome caching, not sure which one works
-            //"runtimeArgs": ["–disable-application-cache","--disk-cache-dir=nul"]
-            "runtimeArgs": ["--auto-open-devtools-for-tabs"]
+            "runtimeArgs": [
+                // "–disable-application-cache",
+                // "--disk-cache-dir=nul",
+                "--auto-open-devtools-for-tabs", 
+                // "-incognito"
+            ]
         }
     ]
 }

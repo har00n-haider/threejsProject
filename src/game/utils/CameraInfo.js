@@ -1,5 +1,5 @@
 import * as THREE from "../../../lib/three.module.js";
-import Component from "../CoroutineRunner";
+import Component from "../CoroutineRunner.js";
 
 class CameraInfo extends Component {
   constructor(gameObject) {
