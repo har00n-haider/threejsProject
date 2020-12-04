@@ -10,7 +10,7 @@ class GameObject {
     this.transform.name = name;
     this.parent = parent;
     this.globals = globals;
-    parent.add(this.transform); // Top level object is the scene itself
+    parent.add(this.transform); // This is where the object gets added to Three.js scene
   }
 
   addComponent(ComponentType, ...args) {
@@ -32,6 +32,14 @@ class GameObject {
       component.update();
     }
   }
+
+  destroy()
+  {
+    for (const component of this.components) {
+      component.destroy();
+    }
+  }
+
 }
 
 export default GameObject;

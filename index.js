@@ -2,7 +2,7 @@
 import globals from "./src/globals.js";
 import * as THREE from "../lib/three.module.js";
 import GameObjectManager from "./src/game/GameObjectManager.js";
-import Kube from "./src/game/Kube.js"
+import KubeController from "./src/game/Kube.js"
 import { Vector3 } from "./lib/three.module.js";
 import { resizeRendererToDisplaySize } from "./src/utils/utils.js";
 
@@ -11,7 +11,7 @@ import { resizeRendererToDisplaySize } from "./src/utils/utils.js";
 const canvas = document.querySelector("#c");
 const renderer = new THREE.WebGLRenderer({ canvas });
 const fov = 45;
-const aspect = 2; // the canvas default
+const aspect = 5; // the canvas default
 const near = 0.1;
 const far = 1000;
 const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
@@ -42,20 +42,14 @@ const gameObject = globals.gameObjectManager.createGameObject(
     globals
 );
 
-// Setting up cubes
-function addCube(x, y, z){
-    var geometry = new THREE.BoxGeometry( x, y, z)
-    var material = new THREE.MeshStandardMaterial( { color: 0x0000ff })
-    var cube = new THREE.Mesh ( geometry, material )
-    return cube;
-}
-var newCube = addCube(2,2,2)
+// Setting up cube
 var kubeGo = globals.gameObjectManager.createGameObject(
     scene,
     "Kube",
     globals
 );
-kubeGo.addComponent(Kube, newCube)
+kubeGo.addComponent(KubeController, 3);
+
 
 // Main render loop
 function render(now) {
@@ -64,7 +58,7 @@ function render(now) {
         const canvas = renderer.domElement;
         camera.aspect = canvas.clientWidth / canvas.clientHeight;
         camera.updateProjectionMatrix();
-      }
+    }
     globals.gameObjectManager.update();
     renderer.render(scene, camera);
     requestAnimationFrame(render);

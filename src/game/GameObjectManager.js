@@ -1,6 +1,7 @@
 import SafeArray from "../utils/SafeArray.js";
 import GameObject from "./GameObject.js";
 
+
 class GameObjectManager {
   constructor() {
     this.gameObjects = new SafeArray();

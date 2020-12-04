@@ -4,5 +4,6 @@ class Component {
     this.gameObject = gameObject;
   }
   update() {}
+  destroy() {}
 }
 export default Component;
