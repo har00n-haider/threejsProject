@@ -1,4 +1,4 @@
-import { waitSeconds } from "../utils/utils.js";
+import { waitSeconds } from "../utils/utils";
 
 class CoroutineRunner {
   constructor(globals) {
