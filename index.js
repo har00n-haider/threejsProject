@@ -3,6 +3,7 @@ import globals from "./src/globals.js";
 import * as THREE from "../lib/three.module.js";
 import GameObjectManager from "./src/game/GameObjectManager.js";
 import KubeController from "./src/game/Kube.js"
+// import InputManager from "./src/utils/InputManager.js"
 import { Vector3 } from "./lib/three.module.js";
 import { resizeRendererToDisplaySize } from "./src/utils/utils.js";
 
@@ -34,6 +35,7 @@ addLight(-5, 5, 5);
     
 // Initialise game objects
 globals.gameObjectManager = new GameObjectManager();
+// globals.inputManager = new InputManager(canvas);
 
 // Setting up camera object
 const gameObject = globals.gameObjectManager.createGameObject(
@@ -60,6 +62,7 @@ function render(now) {
         camera.updateProjectionMatrix();
     }
     globals.gameObjectManager.update();
+    // globals.inputManager.update();
     renderer.render(scene, camera);
     requestAnimationFrame(render);
 }
