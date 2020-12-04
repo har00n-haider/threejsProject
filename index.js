@@ -1,10 +1,8 @@
-
 import globals from "./src/globals.js";
-import * as THREE from "../lib/three.module.js";
+import * as THREE from "./lib/three.module.js";
 import GameObjectManager from "./src/game/GameObjectManager.js";
 import KubeController from "./src/game/Kube.js"
 import InputManager from "./src/utils/InputManager.js"
-import { Vector3 } from "./lib/three.module.js";
 import { resizeRendererToDisplaySize } from "./src/utils/utils.js";
 
 
@@ -19,7 +17,7 @@ const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 globals.canvas = canvas;
 globals.mainCamera = camera;
 camera.position.set(0, 5, 10);
-camera.lookAt(new Vector3(0,0,0))
+camera.lookAt(new THREE.Vector3(0,0,0))
 const scene = new THREE.Scene();
 globals.scene = scene;
 scene.background = new THREE.Color("grey");
