@@ -26,24 +26,21 @@ class KubeController extends Component {
     this.gameObject.transform.position.x += 0.01;
   }
 
-  kubeHitCheck(eventData){
-    console.log("click happened event data : " + eventData);
-
-    // const raycaster = new THREE.Raycaster();
-    // raycaster.setFromCamera( mouse, camera );
-    // const intersects = raycaster.intersectObjects( scene.children );
-    // for ( let i = 0; i < intersects.length; i ++ ) {
+  kubeHitCheck(mousePos){
+    console.log("click happened event data at : " + mousePos.x + ", " + mousePos.y);
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera( mousePos, globals.mainCamera );
+    const intersects = raycaster.intersectObjects( globals.scene.children );
+    for ( let i = 0; i < intersects.length; i ++ ) {
   
-    //     hitCube = intersects[ i ].object;
-    //     hitPos = hitCube.position;
-    //     someDeleteFunction(hitCube);
-    //     miniCube1 = addCube(0.3,0.3,0.3, hitPos)
-    // }
+        var hitCube = intersects[ i ].object;
+        console.log(hitCube);
+    }
   }
 
 
   destroy(){
-      console.log("desroying component");
+      console.log("destroying component");
       this.gameObject.transform.remove(this.mesh);
       this.mesh.geometry.dispose();
       this.mesh.material.dispose();

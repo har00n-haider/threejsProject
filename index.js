@@ -17,10 +17,11 @@ const near = 0.1;
 const far = 1000;
 const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 globals.canvas = canvas;
-globals.camera = camera;
+globals.mainCamera = camera;
 camera.position.set(0, 5, 10);
 camera.lookAt(new Vector3(0,0,0))
 const scene = new THREE.Scene();
+globals.scene = scene;
 scene.background = new THREE.Color("grey");
 function addLight(...pos) {
     const color = 0xffffff;
@@ -35,7 +36,7 @@ addLight(-5, 5, 5);
     
 // Initialise game objects
 globals.gameObjectManager = new GameObjectManager();
-globals.inputManager = new InputManager(window);
+globals.inputManager = new InputManager();
 
 // Setting up camera object
 const gameObject = globals.gameObjectManager.createGameObject(
