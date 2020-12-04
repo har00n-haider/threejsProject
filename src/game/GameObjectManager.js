@@ -7,8 +7,8 @@ class GameObjectManager {
     this.gameObjects = new SafeArray();
   }
 
-  createGameObject(parent, name, globals) {
-    const gameObject = new GameObject(parent, name, globals);
+  createGameObject(parent, name) {
+    const gameObject = new GameObject(parent, name);
     this.gameObjects.add(gameObject);
     return gameObject;
   }
