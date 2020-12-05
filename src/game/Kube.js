@@ -2,7 +2,6 @@ import Component from "./Component.js";
 import * as THREE from "../../lib/three.module.js";
 import globals from "../globals.js";
 
-
 /**
  * Creates a Kube and adds a mesh of 
  * the defined size
@@ -12,7 +11,7 @@ class KubeController extends Component {
     super(gameObject);
     this.mesh = this.addCube(size);
     gameObject.transform.add(this.mesh);
-    globals.inputManager.clickEvent.registerCallback(this.kubeHitCheck);
+    globals.inputManager.clickEvent.regCb(this.kubeHitCheck);
   }
 
   addCube(size){
@@ -32,7 +31,6 @@ class KubeController extends Component {
     raycaster.setFromCamera( mousePos, globals.mainCamera );
     const intersects = raycaster.intersectObjects( globals.scene.children );
     for ( let i = 0; i < intersects.length; i ++ ) {
-  
         var hitCube = intersects[ i ].object;
         console.log(hitCube);
     }
@@ -40,6 +38,7 @@ class KubeController extends Component {
 
 
   destroy(){
+      globals.inputManager.clickEvent.deRegCb(this.kubeHitCheck);
       console.log("destroying component");
       this.gameObject.transform.remove(this.mesh);
       this.mesh.geometry.dispose();

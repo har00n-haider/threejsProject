@@ -4,7 +4,7 @@ import GameObjectManager from "./src/game/GameObjectManager.js";
 import KubeController from "./src/game/Kube.js"
 import InputManager from "./src/utils/InputManager.js"
 import { resizeRendererToDisplaySize } from "./src/utils/utils.js";
-
+import {OrbitControls} from "./lib/OrbitControls.js"
 
 // Initial seup of scene, camera and lights
 const canvas = document.querySelector("#c");
@@ -31,10 +31,40 @@ function addLight(...pos) {
 }
 addLight(5, 5, 2);
 addLight(-5, 5, 5);
-    
+// controls
+var controls = new OrbitControls( camera, renderer.domElement );
+
+// debug axes
+var axes = new THREE.AxesHelper( 100 ); // this will be on top
+scene.add( axes );
+
 // Initialise game objects
 globals.gameObjectManager = new GameObjectManager();
-globals.inputManager = new InputManager();
+globals.inputManager = new InputManager(renderer.domElement);
+
+
+function debugClickRayCast(mousePos)
+{
+
+    // // DEBUG SHIT:
+    // //create a blue LineBasicMaterial
+    // const material = new THREE.LineBasicMaterial( { color: 0x0000ff } );
+    // const points = [];
+    // points.push( new THREE.Vector3( - 10, 0, 0 ) );
+    // points.push( new THREE.Vector3( 0, 10, 0 ) );
+    // points.push( new THREE.Vector3( 10, 0, 0 ) );
+    // const geometry = new THREE.BufferGeometry().setFromPoints( points );
+    // const line = new THREE.Line( geometry, material );
+    // scene.add(line);
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera( mousePos, globals.mainCamera );
+    scene.add(new THREE.ArrowHelper(raycaster.ray.direction, raycaster.ray.origin, 300, 0xff0000) );
+}
+renderer.domElement.onkeyup = function(e){
+    if(e.keyCode == 85){
+         debugClickRayCast(globals.inputManager.mousePos);
+    }
+}
 
 // Setting up camera object
 const gameObject = globals.gameObjectManager.createGameObject(
@@ -53,12 +83,12 @@ kubeGo.addComponent(KubeController, 3);
 // Main render loop
 function render(now) {
     
-    if (resizeRendererToDisplaySize(renderer)) {
-        const canvas = renderer.domElement;
-        camera.aspect = canvas.clientWidth / canvas.clientHeight;
-        camera.updateProjectionMatrix();
-    }
-
+    // if (resizeRendererToDisplaySize(renderer)) {
+    //     const canvas = renderer.domElement;
+    //     camera.aspect = canvas.clientWidth / canvas.clientHeight;
+    //     camera.updateProjectionMatrix();
+    // }
+    controls.update();
     globals.gameObjectManager.update();
     renderer.render(scene, camera);
     requestAnimationFrame(render);

@@ -36,11 +36,20 @@ class DispatcherEvent {
         this.callbacks = [];
     }
 
-    registerCallback(callback) {
+    /**
+     * Register a function to be called,
+     * when event occurs
+     * @param {} callback 
+     */
+    regCb(callback) {
         this.callbacks.push(callback);
     }
 
-    unregisterCallback(callback) {
+    /**
+     * Deregister a callback function
+     * @param {} callback 
+     */
+    deRedCb(callback) {
         const index = this.callbacks.indexOf(callback);
         if (index > -1) {
             this.callbacks.splice(index, 1);

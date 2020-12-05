@@ -3,10 +3,10 @@ import * as THREE from "../../lib/three.module.js";
 import DispatcherEvent from "../../src/utils/Dispatcher.js";
 
 class InputManager {
-  constructor() {
+  constructor(renderElem) {
     this.mousePos = new THREE.Vector2();
-    window.addEventListener( 'mousemove', this.onMouseMove, false );
-    window.addEventListener( 'mousedown', this.onMouseDown, false );
+    renderElem.addEventListener( 'pointermove', this.onMouseMove, false );
+    renderElem.addEventListener( 'pointerdown', this.onMouseDown, false );
     this.clickEvent = new DispatcherEvent('click');
   }
 
@@ -15,6 +15,7 @@ class InputManager {
   onMouseMove = ( event ) => {
     this.mousePos.x = ( event.clientX / window.innerWidth ) * 2 - 1;
     this.mousePos.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+    console.log(this.mousePos);
   }
 
   onMouseDown = (event) => {
