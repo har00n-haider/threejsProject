@@ -1,6 +1,6 @@
-import Component from "./Component.js";
-import * as THREE from "../../lib/three.module.js";
-import globals from "../globals.js";
+import Component from "../Component.js";
+import * as THREE from "../../../lib/three.module.js";
+import globals from "../../globals.js";
 
 /**
  * Creates a Kube and adds a mesh of 
