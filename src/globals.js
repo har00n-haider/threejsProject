@@ -1,7 +1,8 @@
 import * as THREE from "../lib/three.module.js";
 
 const globals = {
-  debug: false,
+  debugger: undefined,
+  canvas: undefined,
   time: 0,
   deltaTime: 0,
   inputManager: undefined,

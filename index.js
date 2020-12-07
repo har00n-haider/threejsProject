@@ -6,6 +6,7 @@ import InputManager from "./src/utils/InputManager.js"
 import { resizeRendererToDisplaySize } from "./src/utils/utils.js";
 import {OrbitControls} from "./lib/OrbitControls.js"
 import {deepDiffMapper} from "./src/utils/utils.js";
+import Debugger from "./src/utils/Debugger.js"
 
 // Initial seup of scene, camera and lights
 const canvas = document.querySelector("canvas");
@@ -21,7 +22,7 @@ camera.position.set(0, 5, 10);
 camera.lookAt(new THREE.Vector3(0,0,0))
 const scene = new THREE.Scene();
 globals.scene = scene;
-scene.background = new THREE.Color("grey");
+scene.background = new THREE.Color('lightgrey');
 function addLight(...pos) {
     const color = 0xffffff;
     const intensity = 1;
@@ -42,6 +43,7 @@ scene.add( axes );
 // Initialise game objects
 globals.gameObjectManager = new GameObjectManager();
 globals.inputManager = new InputManager(renderer.domElement);
+globals.debugger = new Debugger(globals, document.getElementById('debugWrapper'));
 
 function debugClickRayCast(mousePos)
 {
@@ -88,13 +90,12 @@ kubeGo.addComponent(KubeController, 3);
 
 // Main render loop
 function render(now) {
-    
     if (resizeRendererToDisplaySize(renderer)) {
         const canvas = renderer.domElement;
         // camera.aspect = canvas.clientWidth / canvas.clientHeight;
         // camera.updateProjectionMatrix();
     }
-
+    globals.debugger.update();
     controls.update();
     globals.gameObjectManager.update();
     renderer.render(scene, camera);

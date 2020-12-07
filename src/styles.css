@@ -19,21 +19,10 @@ html, body {
 }
 #debugWrapper {
   pointer-events: none;
-}
-#debugWrapper > #fg {
   position: absolute; 
   left: 10px;
   top: 10px;
   width:200px; 
   height:100px; 
-  background-color: yellow;
-}
-#debugWrapper > #bg {
-  z-index: 1;
-  position: absolute;
-  left: 50px;
-  top: 20px;
-  width:100px;
-  height:20px;
-  background-color: green;
+  background-color: darkgray;
 }
