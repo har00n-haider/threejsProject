@@ -1,6 +1,7 @@
 
 import * as THREE from "../../lib/three.module.js";
 import DispatcherEvent from "../../src/utils/Dispatcher.js";
+import globals from "../globals.js";
 
 class InputManager {
   constructor(renderElem) {
@@ -13,9 +14,9 @@ class InputManager {
   // calculate mouse position in normalized device coordinates
   // (-1 to +1) for both components
   onMouseMove = ( event ) => {
-    this.mousePos.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+    this.mousePos.x =   ( event.clientX / window.innerWidth ) * 2 - 1;
     this.mousePos.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-    console.log(this.mousePos);
+    //console.log(this.mousePos);
   }
 
   onMouseDown = (event) => {

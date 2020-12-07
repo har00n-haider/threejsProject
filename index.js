@@ -5,9 +5,10 @@ import KubeController from "./src/game/Kube.js"
 import InputManager from "./src/utils/InputManager.js"
 import { resizeRendererToDisplaySize } from "./src/utils/utils.js";
 import {OrbitControls} from "./lib/OrbitControls.js"
+import {deepDiffMapper} from "./src/utils/utils.js";
 
 // Initial seup of scene, camera and lights
-const canvas = document.querySelector("#c");
+const canvas = document.querySelector("canvas");
 const renderer = new THREE.WebGLRenderer({ canvas });
 const fov = 45;
 const aspect = 5; // the canvas default
@@ -42,7 +43,6 @@ scene.add( axes );
 globals.gameObjectManager = new GameObjectManager();
 globals.inputManager = new InputManager(renderer.domElement);
 
-
 function debugClickRayCast(mousePos)
 {
 
@@ -58,9 +58,15 @@ function debugClickRayCast(mousePos)
     // scene.add(line);
     const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera( mousePos, globals.mainCamera );
-    scene.add(new THREE.ArrowHelper(raycaster.ray.direction, raycaster.ray.origin, 300, 0xff0000) );
+
+    let dir     = new THREE.Vector3(1,1,1);
+    let origin  = new THREE.Vector3(0,0,0);
+    let unitArrow = new THREE.ArrowHelper(dir.normalize(), origin, 20, 'purple');
+    let mouseArrow = new THREE.ArrowHelper(raycaster.ray.direction, raycaster.ray.origin, 300, 0xff0000);
+    scene.add(mouseArrow);
 }
 renderer.domElement.onkeyup = function(e){
+    // U
     if(e.keyCode == 85){
          debugClickRayCast(globals.inputManager.mousePos);
     }
@@ -83,11 +89,12 @@ kubeGo.addComponent(KubeController, 3);
 // Main render loop
 function render(now) {
     
-    // if (resizeRendererToDisplaySize(renderer)) {
-    //     const canvas = renderer.domElement;
-    //     camera.aspect = canvas.clientWidth / canvas.clientHeight;
-    //     camera.updateProjectionMatrix();
-    // }
+    if (resizeRendererToDisplaySize(renderer)) {
+        const canvas = renderer.domElement;
+        // camera.aspect = canvas.clientWidth / canvas.clientHeight;
+        // camera.updateProjectionMatrix();
+    }
+
     controls.update();
     globals.gameObjectManager.update();
     renderer.render(scene, camera);

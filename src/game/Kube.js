@@ -10,6 +10,7 @@ class KubeController extends Component {
   constructor(gameObject, size) {
     super(gameObject);
     this.mesh = this.addCube(size);
+    this.uuid = this.mesh.uuid;
     gameObject.transform.add(this.mesh);
     globals.inputManager.clickEvent.regCb(this.kubeHitCheck);
   }
@@ -25,17 +26,16 @@ class KubeController extends Component {
     this.gameObject.transform.position.x += 0.01;
   }
 
-  kubeHitCheck(mousePos){
-    console.log("click happened event data at : " + mousePos.x + ", " + mousePos.y);
+  kubeHitCheck = (mousePos) => {
+    // console.log("click happened event data at : " + mousePos.x + ", " + mousePos.y);
     const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera( mousePos, globals.mainCamera );
-    const intersects = raycaster.intersectObjects( globals.scene.children );
-    for ( let i = 0; i < intersects.length; i ++ ) {
-        var hitCube = intersects[ i ].object;
-        console.log(hitCube);
+    const intersects = raycaster.intersectObjects( [this.mesh] );
+    if (intersects.length > 0)
+    {
+      this.destroy();
     }
   }
-
 
   destroy(){
       globals.inputManager.clickEvent.deRegCb(this.kubeHitCheck);

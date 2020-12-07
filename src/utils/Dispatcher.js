@@ -49,7 +49,7 @@ class DispatcherEvent {
      * Deregister a callback function
      * @param {} callback 
      */
-    deRedCb(callback) {
+    deRegCb(callback) {
         const index = this.callbacks.indexOf(callback);
         if (index > -1) {
             this.callbacks.splice(index, 1);
