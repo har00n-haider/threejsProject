@@ -1,5 +1,5 @@
 import * as THREE from "../../lib/three.module.js";
-import { removeArrayElement } from "../utils/utils.js";
+import { removeArrayElement } from "../utils/Utils.js";
 
 class GameObject {
   constructor(parent, name) {

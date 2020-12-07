@@ -1,7 +1,7 @@
 
 import * as THREE from "../../lib/three.module.js";
 import DispatcherEvent from "../../src/utils/Dispatcher.js";
-import globals from "../globals.js";
+import globals from "../Globals.js";
 
 class InputManager {
   constructor(renderElem) {
