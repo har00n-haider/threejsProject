@@ -39,11 +39,9 @@ addLight(5, 5, 2);
 addLight(-5, 5, 5);
 
 
-
-
-// // grid
-// const grid = new InfiniteGridHelper(0.5,100,new THREE.Color('white'), 100);
-// scene.add(grid);
+// grid
+const grid = new InfiniteGridHelper(0.5,100,new THREE.Color('white'), 100);
+scene.add(grid);
 
 // controls
 var controls = new OrbitControls( camera, renderer.domElement );
@@ -56,11 +54,11 @@ globals.gameObjectManager = new GameObjectManager();
 globals.inputManager = new InputManager(renderer.domElement);
 globals.debugger = new Debugger(globals, document.getElementById('debugWrapper'));
 
-// const kubeGen = globals.gameObjectManager.createGameObject(
-//     scene,
-//     "KubeGen",
-// )
-// kubeGen.addComponent(KubeGen, 3);
+const kubeGen = globals.gameObjectManager.createGameObject(
+    scene,
+    "KubeGen",
+)
+kubeGen.addComponent(KubeGen, 3);
 
 // boundary box for random generation
 const bbwire = new THREE.WireframeGeometry(new THREE.BoxGeometry(20,20,20))
