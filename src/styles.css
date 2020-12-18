@@ -18,11 +18,12 @@ html, body {
   display: block;
 }
 #debugWrapper {
+  font-size: 10px;
   pointer-events: none;
   position: absolute; 
   left: 10px;
   top: 10px;
-  width:200px; 
+  width:300px; 
   height:100px; 
   background-color: transparent;
 }

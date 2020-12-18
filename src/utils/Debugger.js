@@ -18,8 +18,11 @@ class Debugger  {
         this.debuggerElem.innerHTML = 
         "window size: " + window.innerWidth + " , " + 
                           window.innerHeight + "<br>" + 
-        "canvas size: " + this.globals.canvas.clientWidth + " , " + 
+        "canvas size (DOM ELEM): " + this.globals.canvas.clientWidth + " , " + 
                           this.globals.canvas.clientHeight + "<br>" +
+        "canvas size (RESOLUTION): " + this.globals.canvas.width + " , " + 
+                          this.globals.canvas.height + "<br>" +    
+        "device pixel ratio: " + window.devicePixelRatio + "<br>" +                
         "pointer pos: " + this.globals.inputManager.pointerPos.x.toFixed(2) + " , " + 
                           this.globals.inputManager.pointerPos.y.toFixed(2) + "<br>" ;
     }

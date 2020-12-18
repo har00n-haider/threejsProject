@@ -11,7 +11,6 @@ import InfiniteGridHelper from './lib/InfiniteGridHelper.js';
 import GameObjectManager from "./src/game/GameObjectManager.js";
 import KubeGen from "./src/game/gameObjects/KubeGen.js"
 
-
 // Initial seup of scene, camera and lights
 const canvas = document.querySelector("canvas");
 const renderer = new THREE.WebGLRenderer({ canvas });
@@ -60,7 +59,7 @@ const kubeGen = globals.gameObjectManager.createGameObject(
 )
 kubeGen.addComponent(KubeGen, 3);
 
-// boundary box for random generation
+// boundary box to visualize the random generation
 const bbwire = new THREE.WireframeGeometry(new THREE.BoxGeometry(20,20,20))
 const bbline = new THREE.LineSegments( bbwire );
 bbline.material.depthTest = false;
@@ -69,13 +68,16 @@ bbline.material.transparent = true;
 scene.add(bbline);
 
 
+// Update the canvas size
+if (resizeRendererToDisplaySize(renderer)) {
+    const canvas = renderer.domElement;
+    camera.aspect = canvas.clientWidth / canvas.clientHeight;
+    camera.updateProjectionMatrix();
+}
+
+
 // Main render loop
 function render(now) {
-    if (resizeRendererToDisplaySize(renderer)) {
-        const canvas = renderer.domElement;
-        // camera.aspect = canvas.clientWidth / canvas.clientHeight;
-        // camera.updateProjectionMatrix();
-    }
     globals.debugger.update();
     controls.update();
     globals.gameObjectManager.update();
