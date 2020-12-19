@@ -1,4 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
+import globals from '../Globals.js';
 
 class Debugger  {
     constructor(globals, debuggerElem) {
@@ -22,7 +23,8 @@ class Debugger  {
                           this.globals.canvas.clientHeight + "<br>" +
         "canvas size (RESOLUTION): " + this.globals.canvas.width + " , " + 
                           this.globals.canvas.height + "<br>" +    
-        "device pixel ratio: " + window.devicePixelRatio + "<br>" +                
+        "device pixel ratio: " + window.devicePixelRatio + "<br>" +
+        "FPS : " + (1000/globals.deltaTimeMillSec).toFixed(2) + "<br>" +                                
         "pointer pos: " + this.globals.inputManager.pointerPos.x.toFixed(2) + " , " + 
                           this.globals.inputManager.pointerPos.y.toFixed(2) + "<br>" ;
     }

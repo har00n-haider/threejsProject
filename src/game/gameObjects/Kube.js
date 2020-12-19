@@ -17,7 +17,7 @@ class KubeController extends Component {
 
   addCube(size){
     var geometry = new THREE.BoxGeometry(size, size, size);
-    var material = new THREE.MeshStandardMaterial( { color: 0x0000ff });
+    var material = new THREE.MeshStandardMaterial( { color: 0xC4D99C });
     var cube = new THREE.Mesh ( geometry, material );
     return cube;
   } 
