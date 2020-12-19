@@ -7,6 +7,9 @@ const globals = {
   deltaTime: 0,
   inputManager: undefined,
   mainCamera: undefined,
-  scene: undefined
+  scene: undefined,
+  renderer: undefined,
+  orbitControls: undefined,
+  gameObjectManager : undefined,
 };
 export default globals;
