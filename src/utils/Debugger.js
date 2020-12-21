@@ -13,6 +13,11 @@ class Debugger  {
           this.debugClickRayCast(this.globals.inputManager.pointerPos);
         }
       }.bind(this);
+
+      this.clickEvents = 0;
+      globals.inputManager.clickEvent.regCb(()=>{
+        this.clickEvents++;
+      });
     }
 
     update = () => {
@@ -26,7 +31,8 @@ class Debugger  {
         "device pixel ratio: " + window.devicePixelRatio + "<br>" +
         "FPS : " + (1000/globals.deltaTimeMillSec).toFixed(2) + "<br>" +                                
         "pointer pos: " + this.globals.inputManager.pointerPos.x.toFixed(2) + " , " + 
-                          this.globals.inputManager.pointerPos.y.toFixed(2) + "<br>" ;
+                          this.globals.inputManager.pointerPos.y.toFixed(2) + "<br>" +
+        "registered clicks: " + this.clickEvents + "<br>";
     }
 
     debugClickRayCast = (pointerPos) =>
