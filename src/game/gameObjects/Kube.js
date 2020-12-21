@@ -1,6 +1,7 @@
 import Component from "../Component.js";
 import * as THREE from "../../../lib/three.module.js";
 import globals from "../../Globals.js";
+import ParticleSystem from './ExplosionParticleSystem.js';
 
 /**
  * Creates a Kube and adds a mesh of 
@@ -38,8 +39,9 @@ class KubeController extends Component {
   }
 
   destroy(){
-      globals.inputManager.clickEvent.deRegCb(this.kubeHitCheck);
+      this.gameObject.getComponent(ParticleSystem).play();
       console.log("destroying component");
+      globals.inputManager.clickEvent.deRegCb(this.kubeHitCheck);
       this.gameObject.transform.remove(this.mesh);
       this.mesh.geometry.dispose();
       this.mesh.material.dispose();
