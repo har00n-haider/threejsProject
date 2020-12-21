@@ -63,7 +63,7 @@ class ParticleSystem extends Component {
   _LoadMaterials(){
     const uniforms = {
       diffuseTexture: {
-        value: new THREE.TextureLoader().load('../../../assets/fire.png')
+        value: new THREE.TextureLoader().load('../../assets/fire.png')
       },
       pointMultiplier: {
         value: window.innerHeight / (2.0 * Math.tan(0.5 * 60.0 * Math.PI / 180.0))

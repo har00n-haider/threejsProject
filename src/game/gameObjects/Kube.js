@@ -13,7 +13,7 @@ class KubeController extends Component {
     this.mesh = this.addCube(size);
     this.uuid = this.mesh.uuid;
     this.velocity = velocity;
-    this.explosionAudio = new Audio('../../../assets/Explosion+7_freesoundeffects.com.mp3');
+    this.explosionAudio = new Audio('../../assets/Explosion+7_freesoundeffects.com.mp3');
     gameObject.transform.add(this.mesh);
     globals.inputManager.clickEvent.regCb(this.kubeHitCheck);
   }
