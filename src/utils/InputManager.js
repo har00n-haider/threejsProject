@@ -1,4 +1,3 @@
-
 import * as THREE from "../../lib/three.module.js";
 import DispatcherEvent from "../../src/utils/Dispatcher.js";
 import globals from "../Globals.js";
@@ -14,17 +13,27 @@ class InputManager {
   // calculate mouse position in normalized device coordinates
   // (-1 to +1) for both components
   onMouseMove = ( event ) => {
-    this.pointerPos.x =   ( event.clientX / window.innerWidth ) * 2 - 1;
-    this.pointerPos.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-    //console.log(this.mousePos);
+    this.pointerPos = this.normaliseWindowPointerPos(
+      event.x, 
+      event.y
+    );
   }
 
   onMouseDown = (event) => {
-    this.clickEvent.fire(this.pointerPos);
+    this.clickEvent.fire(this.normaliseWindowPointerPos(
+      event.x, 
+      event.y
+    ));
   }
 
   update() {
+  }
 
+  normaliseWindowPointerPos = (x , y) => {
+    return new THREE.Vector2(
+        ( x / window.innerWidth  ) * 2 - 1,
+      - ( y / window.innerHeight ) * 2 + 1
+    );
   }
 }
 

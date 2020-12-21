@@ -15,7 +15,8 @@ class Debugger  {
       }.bind(this);
 
       this.clickEvents = 0;
-      globals.inputManager.clickEvent.regCb(()=>{
+      globals.inputManager.clickEvent.regCb((pointerPos)=>{
+        //this.debugClickRayCast(this.globals.inputManager.pointerPos);
         this.clickEvents++;
       });
     }
