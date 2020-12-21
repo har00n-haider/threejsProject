@@ -39,7 +39,7 @@ class ParticleSystem extends Component {
   constructor(gameObject) {
     super(gameObject);
 
-    this._parent = globals.scene;
+    this._parent = gameObject.transform;
     this._camera = globals.mainCamera;
     this._particles = [];
 
@@ -256,6 +256,10 @@ class ParticleSystem extends Component {
         this._lifeSecs = 0;
         this._isPlaying = false;
       };
+    }
+    // automatically destroy
+    if(this._points.length === 0 &&  this._isPlaying){
+      this.destroy();
     }
     this._UpdateParticles(_deltaTimeSec);
     this._UpdateGeometry();

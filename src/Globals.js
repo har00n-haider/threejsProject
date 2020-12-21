@@ -1,5 +1,3 @@
-import * as THREE from "../lib/three.module.js";
-
 const globals = {
   debugger: undefined,
   canvas: undefined,
@@ -10,6 +8,7 @@ const globals = {
   scene: undefined,
   renderer: undefined,
   orbitControls: undefined,
-  gameObjectManager : undefined,
+  gameObjectManager: undefined,
+  audioManager: undefined,
 };
 export default globals;

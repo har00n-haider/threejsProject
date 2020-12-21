@@ -8,10 +8,12 @@ import ParticleSystem from './ExplosionParticleSystem.js';
  * the defined size
  */
 class KubeController extends Component {
-  constructor(gameObject, size) {
+  constructor(gameObject, size, velocity) {
     super(gameObject);
     this.mesh = this.addCube(size);
     this.uuid = this.mesh.uuid;
+    this.velocity = velocity;
+    this.explosionAudio = new Audio('../../../assets/Explosion+7_freesoundeffects.com.mp3');
     gameObject.transform.add(this.mesh);
     globals.inputManager.clickEvent.regCb(this.kubeHitCheck);
   }
@@ -24,7 +26,9 @@ class KubeController extends Component {
   } 
 
   update() {
-    this.gameObject.transform.position.x += 0.01;
+    this.gameObject.transform.position.x += this.velocity.x;
+    this.gameObject.transform.position.y += this.velocity.y;
+    this.gameObject.transform.position.z += this.velocity.z;
   }
 
   kubeHitCheck = (mousePos) => {
@@ -39,6 +43,7 @@ class KubeController extends Component {
   }
 
   destroy(){
+      this.explosionAudio.play();
       this.gameObject.getComponent(ParticleSystem).play();
       console.log("destroying component");
       globals.inputManager.clickEvent.deRegCb(this.kubeHitCheck);

@@ -9,7 +9,7 @@ class KubeGen extends Component {
   constructor(gameObject, config) {
     super(gameObject);
     this.kubeGos = [];
-    this.limitKNo = 1;
+    this.limitKNo = 5;
     this.currentNo = 0;
   }
 
@@ -18,11 +18,17 @@ class KubeGen extends Component {
         this.gameObject.transform,
         'Kube' + this.kubeGos.length
     );
-    kubeGo.addComponent(KubeController, 3);
+    const velCap = 0.05;
+    kubeGo.addComponent(KubeController, 3, new THREE.Vector3(
+      rand(-velCap,velCap),
+      rand(-velCap,velCap),
+      rand(-velCap,velCap)
+    ));
     kubeGo.addComponent(ParticleSystem);
-    kubeGo.transform.position.x = rand(-10,10);
-    kubeGo.transform.position.y = rand(-10,10);
-    kubeGo.transform.position.z = rand(-10,10);
+    const posCap = 30;
+    kubeGo.transform.position.x = rand(-posCap,posCap);
+    kubeGo.transform.position.y = rand(-posCap,posCap);
+    kubeGo.transform.position.z = rand(-posCap,posCap);
     this.kubeGos.push(kubeGo);
   }
 

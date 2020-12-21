@@ -9,6 +9,7 @@ import InfiniteGridHelper from './lib/InfiniteGridHelper.js';
 // GameObjects
 import GameObjectManager from './src/game/GameObjectManager.js';
 import KubeGen from './src/game/gameObjects/KubeGen.js';
+import AudioManager from './src/utils/AudioManager.js';
 
 // Initial seup of scene, camera and lights
 function initialise() {
@@ -105,6 +106,9 @@ function render(curTimeMilliSec) {
 }
 
 function setupGameObjects() {
+  // audio
+  globals.audioManager = new AudioManager();
+
   // grid
   const grid = new InfiniteGridHelper(0.5, 100, new THREE.Color('white'), 100);
   globals.scene.add(grid);
@@ -129,14 +133,6 @@ function setupGameObjects() {
     'KubeGen',
   );
   kubeGen.addComponent(KubeGen, 3);
-
-  // boundary box to visualize the random generation
-  const bbwire = new THREE.WireframeGeometry(new THREE.BoxGeometry(20, 20, 20));
-  const bbline = new THREE.LineSegments(bbwire);
-  bbline.material.depthTest = false;
-  bbline.material.opacity = 1;
-  bbline.material.transparent = true;
-  globals.scene.add(bbline);
 }
 
 initialise();
