@@ -8,7 +8,6 @@ import globals from './lib/gameEngine/Globals.js';
 import InfiniteGridHelper from './lib/InfiniteGridHelper.js';
 // GameObjects
 import GameObjectManager from './lib/gameEngine/ecs/GameObjectManager.js';
-import KubeGen from './src/game/gameObjects/KubeGen.js';
 import AudioManager from './lib/gameEngine/utils/AudioManager.js';
 
 // Initial seup of scene, camera and lights
@@ -127,12 +126,6 @@ function setupGameObjects() {
   globals.gameObjectManager = new GameObjectManager();
   globals.inputManager = new InputManager(globals.renderer.domElement);
   globals.debugger = new Debugger(globals, document.getElementById('debugWrapper'));
-
-  const kubeGen = globals.gameObjectManager.createGameObject(
-    globals.scene,
-    'KubeGen',
-  );
-  kubeGen.addComponent(KubeGen, 3);
 }
 
 initialise();
