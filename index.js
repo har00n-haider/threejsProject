@@ -4,7 +4,7 @@ import * as THREE from './lib/three.module.js';
 import { OrbitControls } from './lib/OrbitControls.js';
 import Debugger from './src/utils/Debugger.js';
 import InputManager from './src/utils/InputManager.js';
-import globals from './src/Globals.js';
+import globals from './lib/gameEngine/Globals.js';
 import InfiniteGridHelper from './lib/InfiniteGridHelper.js';
 // GameObjects
 import GameObjectManager from './src/game/GameObjectManager.js';

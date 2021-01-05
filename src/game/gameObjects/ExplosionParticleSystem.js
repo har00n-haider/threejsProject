@@ -1,6 +1,6 @@
 import * as THREE from '../../../lib/three.module.js';
 import Component from '../Component.js';
-import globals from  '../../Globals.js';
+import globals from  '../../../lib/gameEngine/Globals.js';
 
 class LinearSpline {
   constructor(lerp) {

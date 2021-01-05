@@ -1,5 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
-import globals from '../Globals.js';
+import globals from '../../lib/gameEngine/Globals.js';
 
 class Debugger  {
     constructor(globals, debuggerElem) {

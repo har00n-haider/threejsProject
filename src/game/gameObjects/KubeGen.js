@@ -1,6 +1,6 @@
 import Component from "../Component.js";
 import * as THREE from "../../../lib/three.module.js";
-import globals from "../../Globals.js";
+import globals from "../../../lib/gameEngine/Globals.js";
 import KubeController from '../../game/gameObjects/Kube.js';
 import {rand} from '../../utils/Utils.js'
 import ParticleSystem from './ExplosionParticleSystem.js';
