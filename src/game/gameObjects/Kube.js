@@ -1,4 +1,4 @@
-import Component from "../Component.js";
+import Component from "../../../lib/gameEngine/ecs/Component.js";
 import * as THREE from "../../../lib/three.module.js";
 import globals from "../../../lib/gameEngine/Globals.js";
 import ParticleSystem from './ExplosionParticleSystem.js';

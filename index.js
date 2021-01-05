@@ -7,7 +7,7 @@ import InputManager from './lib/gameEngine/utils/InputManager.js';
 import globals from './lib/gameEngine/Globals.js';
 import InfiniteGridHelper from './lib/InfiniteGridHelper.js';
 // GameObjects
-import GameObjectManager from './src/game/GameObjectManager.js';
+import GameObjectManager from './lib/gameEngine/ecs/GameObjectManager.js';
 import KubeGen from './src/game/gameObjects/KubeGen.js';
 import AudioManager from './lib/gameEngine/utils/AudioManager.js';
 
