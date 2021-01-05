@@ -1,4 +1,4 @@
-import SafeArray from "../utils/SafeArray.js";
+import SafeArray from "../../lib/gameEngine/utils/SafeArray.js";
 import GameObject from "./GameObject.js";
 
 

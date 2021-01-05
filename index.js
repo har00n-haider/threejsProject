@@ -2,14 +2,14 @@
 /* eslint-disable import/extensions */
 import * as THREE from './lib/three.module.js';
 import { OrbitControls } from './lib/OrbitControls.js';
-import Debugger from './src/utils/Debugger.js';
-import InputManager from './src/utils/InputManager.js';
+import Debugger from './lib/gameEngine/utils/Debugger.js';
+import InputManager from './lib/gameEngine/utils/InputManager.js';
 import globals from './lib/gameEngine/Globals.js';
 import InfiniteGridHelper from './lib/InfiniteGridHelper.js';
 // GameObjects
 import GameObjectManager from './src/game/GameObjectManager.js';
 import KubeGen from './src/game/gameObjects/KubeGen.js';
-import AudioManager from './src/utils/AudioManager.js';
+import AudioManager from './lib/gameEngine/utils/AudioManager.js';
 
 // Initial seup of scene, camera and lights
 function initialise() {
