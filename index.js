@@ -139,27 +139,109 @@ function setupDatGUI(){
 
 }
 
-function display3drepoMesh(clippingPlane) {
-  console.log(clippingPlane);
-  // const normal = repoApiToThreejs(new THREE.Vector3(
-  //   clippingPlane.normal[0],
-  //   clippingPlane.normal[1],
-  //   clippingPlane.normal[2],
-  // ));
+function arePlanesParrallel(plane1, plane2){
+  let threshold = 0.000001;
+  let ratiosToCheck = [];
+  let aRatio = plane2.a != 0 ? Math.abs(plane1.a/plane2.a) : 0;
+  let bRatio = plane2.b != 0 ? Math.abs(plane1.b/plane2.b) : 0;
+  let cRatio = plane2.c != 0 ? Math.abs(plane1.c/plane2.c) : 0;
+  if(aRatio != 0) { ratiosToCheck.push(aRatio); }
+  if(bRatio != 0) { ratiosToCheck.push(bRatio); }
+  if(cRatio != 0) { ratiosToCheck.push(cRatio); }
+  let firstRatio = ratiosToCheck[0];
+  for (let i = 0; i < ratiosToCheck.length; i++) {
+    ratiosToCheck[i] -= firstRatio;
+  }
+  if(ratiosToCheck.filter(val => val < threshold).length == ratiosToCheck.length)
+  {
+    return true;
+  }
+  else {
+    return false;
+  }
+}
 
-  const distance = clippingPlane.distance * clippingPlane.clipDirection;
-  const planeNormal = repoApiToThreejs(clippingPlane.normal);
-  const newPos = new THREE.Vector3(planeNormal.x, planeNormal.y, planeNormal.z).multiplyScalar(distance);
-  const planeEq = {
-    a : planeNormal.x,
-    b : planeNormal.y,
-    c : planeNormal.z,
-    d : distance
+function getPointFromPlanes(plane1, plane2, plane3){
+  const A = new THREE.Matrix3();
+  A.set(
+    plane1.a, plane1.b, plane1.c,
+    plane2.a, plane2.b, plane2.c,
+    plane3.a, plane3.b, plane3.c
+    )
+  A.invert();
+  const B = new THREE.Vector3(
+    -plane1.d,
+    -plane2.d,
+    -plane3.d
+    )
+  let result = B.applyMatrix3(A);
+  return result;
+}
+
+function getPlanePairs(planeEqsArr){
+  let planePairs = [];
+  while(planeEqsArr.length > 0){
+    for (let i = 1; i < planeEqsArr.length; i++) {
+      if(arePlanesParrallel(planeEqsArr[0], planeEqsArr[i])){
+        planePairs.push({
+          p1 : planeEqsArr[0],
+          p2 : planeEqsArr[i]
+        });
+        planeEqsArr.splice(0, 1);
+        planeEqsArr.splice(i-1, 1);
+        break;
+      };
+    }
+  }
+  return planePairs;
+}
+
+function display3drepoMesh(clippingPlanes) {
+  let planeEqArr = []; 
+  for (const plane of clippingPlanes) {
+    const distance = plane.distance;
+    const planeNormal = repoApiToThreejs(plane.normal);
+    planeEqArr.push({
+      a : planeNormal.x,
+      b : planeNormal.y,
+      c : planeNormal.z,
+      d : distance
+    });  
+  }
+  let planePairs = getPlanePairs(planeEqArr);
+  let topPnts = [];
+  let btmPnts = [];
+
+  topPnts.push(getPointFromPlanes(planePairs[0].p1, planePairs[1].p1, planePairs[2].p1)); 
+  topPnts.push(getPointFromPlanes(planePairs[0].p1, planePairs[1].p2, planePairs[2].p1)); 
+  topPnts.push(getPointFromPlanes(planePairs[0].p1, planePairs[1].p1, planePairs[2].p2)); 
+  topPnts.push(getPointFromPlanes(planePairs[0].p1, planePairs[1].p2, planePairs[2].p2)); 
+  
+  btmPnts.push(getPointFromPlanes(planePairs[0].p2, planePairs[1].p1, planePairs[2].p1)); 
+  btmPnts.push(getPointFromPlanes(planePairs[0].p2, planePairs[1].p2, planePairs[2].p1)); 
+  btmPnts.push(getPointFromPlanes(planePairs[0].p2, planePairs[1].p1, planePairs[2].p2)); 
+  btmPnts.push(getPointFromPlanes(planePairs[0].p2, planePairs[1].p2, planePairs[2].p2)); 
+  
+  for (let pntCtr = 0; pntCtr < topPnts.length; pntCtr ++) {
+    let p1 = new THREE.Vector3(topPnts[pntCtr].x, topPnts[pntCtr].y, topPnts[pntCtr].z);
+    let p2 = new THREE.Vector3(btmPnts[pntCtr].x, btmPnts[pntCtr].y, btmPnts[pntCtr].z);
+    let arwVecOrg = new THREE.Vector3(btmPnts[pntCtr].x, btmPnts[pntCtr].y, btmPnts[pntCtr].z);
+    let arwVec = p1.add(p2.multiplyScalar(-1));
+    let hlfarwVec = new THREE.Vector3(arwVec.x, arwVec.y, arwVec.z);
+    hlfarwVec.multiplyScalar(0.5);
+    let midPoint = arwVecOrg.add(hlfarwVec);
+    addArrowHelper(arwVec, btmPnts[pntCtr], arwVec.length());
+    addPointAsSphere(topPnts[pntCtr]);
+    addPointAsSphere(btmPnts[pntCtr]);
+    addPointAsSphere(midPoint, 'blue');
   }
 
   loadModel();
+}
 
+function addPlane(planeNormal, distance){
   // plane
+  const newPos = new THREE.Vector3(planeNormal.x, planeNormal.y, planeNormal.z).multiplyScalar(-distance);
   const plane = globals.gameObjectManager.createGameObject(globals.scene, 'plane');
   const planeGeometry = new THREE.PlaneGeometry(10, 10);
   const planeMaterial = new THREE.MeshPhongMaterial({
@@ -172,32 +254,21 @@ function display3drepoMesh(clippingPlane) {
   plane.transform.add(planeGeo);
   plane.transform.lookAt(planeNormal);
   plane.transform.position.set(newPos.x, newPos.y, newPos.z);
-
-  // vectors for civil conversion
-  let civilArgs = convertToCivilStyleSection(planeNormal, distance);
-  addArrowHelper(civilArgs.sectionUp, newPos);
-  addPointAsSphere(civilArgs.point1);
-  addPointAsSphere(civilArgs.point2);
-
-  // // points 
-  // const points = globals.gameObjectManager.createGameObject(globals.scene, 'plane');
-  // var dotGeometry = new THREE.Geometry();
-  // dotGeometry.vertices = calculateRandomPointsOnPlane(planeEq, 100, 5);
-  // var dotMaterial = new THREE.PointsMaterial( { size: 3, sizeAttenuation: false, color: 'blue' } );
-  // var dots = new THREE.Points( dotGeometry, dotMaterial );
-  // points.transform.add(dots);
 }
 
 function getSectionPlaneFrom3dRepo(){
     // getting the section plane data from 3drepo
     const apiKey = '670f65dd5a45cc01dc97d771ffad2b35';
     const modelId = '43dac390-5668-11eb-901c-8dcbf0759038';
-    const issueId = '8f802f30-567f-11eb-b14c-331a8baa9a5e'; // 5-4-1
+    // const issueId = '8f802f30-567f-11eb-b14c-331a8baa9a5e'; // 5-4-1
     // const issueId = '602cb4b0-567f-11eb-b14c-331a8baa9a5e'; // in half
     // const issueId = 'afe494c0-5669-11eb-b14c-331a8baa9a5e'; // 3-1-2
     // const issueId = 'e23cc080-5729-11eb-b14c-331a8baa9a5e'; // 3-5-1
+    const issueId = 'e49e9360-599c-11eb-bb0d-b34330a480ad'; // full clip box -  5-3-1
+    // const issueId = '35992d00-59d1-11eb-9e73-c3cab698f37e'; // full clip box - axis aligned
+    // const issueId = 'a8794560-59d8-11eb-9e73-c3cab698f37e'; // full clip box - straight down the middle 
+    // const issueId = '2d6812f0-59da-11eb-bb0d-b34330a480ad'; // 4 plane clip box 
 
-    
     const teamSpace = 'HH';
     const urlBase = 'https://api1.staging.dev.3drepo.io/api' 
     const url = urlBase.concat(
@@ -210,7 +281,7 @@ function getSectionPlaneFrom3dRepo(){
     fetch(url)
       .then((response) => response.json())
       .then((data) => {
-        display3drepoMesh(data.viewpoint.clippingPlanes[0]);
+        display3drepoMesh(data.viewpoint.clippingPlanes);
       })
       .catch((error) => {
         console.log('Dammit');
@@ -265,16 +336,16 @@ function loadModel(){
   );
 }
 
-function addPointAsSphere(pos){
+function addPointAsSphere(pos, color = 'yellow'){
   const geometry = new THREE.SphereGeometry( 0.1, 32, 32 );
-  const material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
+  const material = new THREE.MeshBasicMaterial( {color: color} );
   const sphere = new THREE.Mesh( geometry, material);
   sphere.position.set(pos.x,pos.y,pos.z);
   globals.scene.add( sphere );
 }
 
-function addArrowHelper(vector, origin, color = 'green'){
-  let arrow = new THREE.ArrowHelper(vector.normalize(), origin, 8, color);
+function addArrowHelper(vector, origin, length = 8, color = 'green'){
+  let arrow = new THREE.ArrowHelper(vector.normalize(), origin, length, color);
   globals.scene.add(arrow);
 }
 
