@@ -13,7 +13,6 @@ import GameObjectManager from './lib/gameEngine/ecs/GameObjectManager.js';
 import AudioManager from './lib/gameEngine/utils/AudioManager.js';
 import {rand} from "./lib/gameEngine/utils/Utils.js";
 
-
 // Initial setup of scene, camera and lights
 function initialise() {
   // canvas setup
@@ -82,10 +81,6 @@ function initialise() {
   //     './resources/negz.jpg',
   // ]);
   // this._scene.background = texture;
-
-  // GUI
-  globals.shit = 0;
-  setupDatGUI();
 }
 
 function onCanvasResize() {
@@ -110,8 +105,6 @@ function render(curTimeMilliSec) {
   globals.gameObjectManager.update();
   globals.renderer.render(globals.scene, globals.mainCamera);
   requestAnimationFrame(render);
-
-  console.log(globals.shit);
 }
 
 function setupGameObjects() {
@@ -137,13 +130,13 @@ function setupGameObjects() {
   globals.inputManager = new InputManager(globals.renderer.domElement);
   globals.debugger = new Debugger(globals, document.getElementById('debugWrapper'));
 
-  //getSectionPlaneFrom3dRepo();
+  getSectionPlaneFrom3dRepo();
 }
 
 function setupDatGUI(){
   const gui = new GUI();
   gui.add(globals, 'shit', 0, 0.5).name("something");
- 
+
 }
 
 function display3drepoMesh(clippingPlane) {
@@ -169,7 +162,12 @@ function display3drepoMesh(clippingPlane) {
   // plane
   const plane = globals.gameObjectManager.createGameObject(globals.scene, 'plane');
   const planeGeometry = new THREE.PlaneGeometry(10, 10);
-  const planeMaterial = new THREE.MeshStandardMaterial({ color: 'green', side: THREE.DoubleSide });
+  const planeMaterial = new THREE.MeshPhongMaterial({
+    color: 'green',
+    opacity: 0.5,
+    transparent: true,
+    side: THREE.DoubleSide,
+  });
   const planeGeo = new THREE.Mesh(planeGeometry, planeMaterial);
   plane.transform.add(planeGeo);
   plane.transform.lookAt(planeNormal);
@@ -194,12 +192,12 @@ function getSectionPlaneFrom3dRepo(){
     // getting the section plane data from 3drepo
     const apiKey = '670f65dd5a45cc01dc97d771ffad2b35';
     const modelId = '43dac390-5668-11eb-901c-8dcbf0759038';
-    // const issueId = 'afe494c0-5669-11eb-b14c-331a8baa9a5e';
-    // const issueId = '602cb4b0-567f-11eb-b14c-331a8baa9a5e';
-    const issueId = '8f802f30-567f-11eb-b14c-331a8baa9a5e';
+    const issueId = '8f802f30-567f-11eb-b14c-331a8baa9a5e'; // 5-4-1
+    // const issueId = '602cb4b0-567f-11eb-b14c-331a8baa9a5e'; // in half
+    // const issueId = 'afe494c0-5669-11eb-b14c-331a8baa9a5e'; // 3-1-2
+    // const issueId = 'e23cc080-5729-11eb-b14c-331a8baa9a5e'; // 3-5-1
+
     
-
-
     const teamSpace = 'HH';
     const urlBase = 'https://api1.staging.dev.3drepo.io/api' 
     const url = urlBase.concat(
@@ -222,9 +220,9 @@ function getSectionPlaneFrom3dRepo(){
 
 function repoApiToThreejs(vector) {
   return new THREE.Vector3(
-    vector[2],
-    vector[1],
     vector[0],
+    vector[1],
+    vector[2],
   );
 }
 
