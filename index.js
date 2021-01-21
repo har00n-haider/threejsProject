@@ -8,10 +8,10 @@ import globals from './lib/gameEngine/Globals.js';
 import InfiniteGridHelper from './lib/InfiniteGridHelper.js';
 import {OBJLoader} from './lib/OBJLoader.js';
 import {GUI} from './lib/dat.gui.module.js';
-// GameObjects
+// GameEngine stuff
 import GameObjectManager from './lib/gameEngine/ecs/GameObjectManager.js';
 import AudioManager from './lib/gameEngine/utils/AudioManager.js';
-import {rand} from "./lib/gameEngine/utils/Utils.js";
+import {rand, randVec3} from './lib/gameEngine/utils/Utils.js';
 
 //#region Game engine stuff
 // Initial setup of scene, camera and lights
@@ -131,49 +131,28 @@ function setupGameObjects() {
   globals.inputManager = new InputManager(globals.renderer.domElement);
   globals.debugger = new Debugger(globals, document.getElementById('debugWrapper'));
 
-  getSectionPlaneFrom3dRepo();
+  loadModel();
 }
 
 function setupDatGUI(){
   const gui = new GUI();
-  gui.add(globals, 'shit', 0, 0.5).name("something");
-
+  gui.add(globals, 'shit', 0, 0.5).name('something');
 }
 //#endregion
-
-//#region Repo interaction
-function display3drepoMesh(clippingPlanes) {
-  let planeEqArr = []; 
-  for (const plane of clippingPlanes) {
-    const planeNormal = repoApiToThreejs(plane.normal);
-    // Plane from 3dRepo api maps to:
-    // ax + by + cz + d = 0
-    const planeEq = {
-      a : planeNormal.x,
-      b : planeNormal.y,
-      c : planeNormal.z,
-      d : plane.distance
-    };
-    planeEqArr.push(planeEq);  
-    addPlane(planeEq);
-    calculateRandomPointsOnPlane(planeEq,100, 10);
-  }
-
-  loadModel();
-}
 
 function getSectionPlaneFrom3dRepo(){
     // getting the section plane data from 3drepo
     const apiKey = '670f65dd5a45cc01dc97d771ffad2b35';
     const modelId = '43dac390-5668-11eb-901c-8dcbf0759038';
-    const issueId = '8f802f30-567f-11eb-b14c-331a8baa9a5e'; // 5-4-1
+    // const issueId = '8f802f30-567f-11eb-b14c-331a8baa9a5e'; // 5-4-1
     // const issueId = '602cb4b0-567f-11eb-b14c-331a8baa9a5e'; // in half
-    // const issueId = 'afe494c0-5669-11eb-b14c-331a8baa9a5e'; // 3-1-2
+    const issueId = 'afe494c0-5669-11eb-b14c-331a8baa9a5e'; // 3-1-2
     // const issueId = 'e23cc080-5729-11eb-b14c-331a8baa9a5e'; // 3-5-1
     // const issueId = 'e49e9360-599c-11eb-bb0d-b34330a480ad'; // full clip box -  5-3-1
     // const issueId = '35992d00-59d1-11eb-9e73-c3cab698f37e'; // full clip box - axis aligned
     // const issueId = 'a8794560-59d8-11eb-9e73-c3cab698f37e'; // full clip box - straight down the middle 
     // const issueId = '2d6812f0-59da-11eb-bb0d-b34330a480ad'; // 4 plane clip box 
+    // const issueId = 'd1b73ae0-5b36-11eb-8190-0f3cc630421e'; // section starts outside box
 
     const teamSpace = 'HH';
     const urlBase = 'https://api1.staging.dev.3drepo.io/api' 
@@ -188,22 +167,57 @@ function getSectionPlaneFrom3dRepo(){
       .then((response) => response.json())
       .then((data) => {
         display3drepoMesh(data.viewpoint.clippingPlanes);
-      })
-      .catch((error) => {
-        console.log('Dammit');
-        console.log(error);
       });
+      // .catch((error) => {
+      //   console.log('Dammit');
+      //   console.log(error);
+      // });
+}
+
+function display3drepoMesh(clippingPlanes) {
+  let planeArr = []; 
+  for (const repoPlane of clippingPlanes) {
+    const planeNormal = repoApiToThreejs(repoPlane.normal);
+    // Plane from 3dRepo api maps to:
+    // ax + by + cz + d = 0
+    const planeCenter = new THREE.Vector3().add(new THREE.Vector3().copy(planeNormal).multiplyScalar(-repoPlane.distance));
+    const plane = {
+      a : planeNormal.x,
+      b : planeNormal.y,
+      c : planeNormal.z,
+      d : repoPlane.distance,
+      normal: planeNormal,
+      center: planeCenter
+    };
+    planeArr.push(plane);  
+    addPlane(plane);
+    //calculateRandomPointsOnPlane(plane,100, 10);
+  }
+
+  const bbox = getBoundingBoxFromModel();
+
+  genOppParrallelPlane(planeArr[0], bbox);
+
+  //convertToCivilStyleBoxSection(planeArr);
+
 }
 
 function loadModel(){
-  // the dice model
   const loader = new OBJLoader();
   loader.load(
-    // resource URL
     'assets/dado.obj',
     // called when resource is loaded
     function ( object ) {
+      object.name = 'dice';
+      const modelMat = new THREE.MeshPhongMaterial({
+        color: 'grey',
+        opacity: 0.2,
+        transparent: true,
+      });
+      object.children[0].material = modelMat; 
       globals.scene.add( object );
+      addBbox(object);
+      getSectionPlaneFrom3dRepo();
     },
     // called when loading is in progresses
     function ( xhr ) {
@@ -211,7 +225,7 @@ function loadModel(){
     },
     // called when loading has errors
     function ( error ) {
-      console.log( 'An error happened' );
+      console.log( 'loading error: ' + error );
     }
   );
 }
@@ -265,17 +279,17 @@ function getPointFromPlanes(plane1, plane2, plane3){
   return result;
 }
 
-function getPlanePairs(planeEqsArr){
+function getPlanePairs(planesArr){
   let planePairs = [];
-  while(planeEqsArr.length > 0){
-    for (let i = 1; i < planeEqsArr.length; i++) {
-      if(arePlanesParrallel(planeEqsArr[0], planeEqsArr[i])){
+  while(planesArr.length > 0){
+    for (let i = 1; i < planesArr.length; i++) {
+      if(arePlanesParrallel(planesArr[0], planesArr[i])){
         planePairs.push({
-          p1 : planeEqsArr[0],
-          p2 : planeEqsArr[i]
+          p1 : planesArr[0],
+          p2 : planesArr[i]
         });
-        planeEqsArr.splice(0, 1);
-        planeEqsArr.splice(i-1, 1);
+        planesArr.splice(0, 1);
+        planesArr.splice(i-1, 1);
         break;
       };
     }
@@ -307,13 +321,13 @@ function convertToCivilStyleSection(normal, distance){
   let civilOrthVec1 = new THREE.Vector3();
   switch (orderedPairs[0][0])
   {
-      case "C&B":
+      case 'C&B':
           civilOrthVec1 = new THREE.Vector3(0, normal.z, -normal.y);
           break;
-      case "C&A":
+      case 'C&A':
           civilOrthVec1 = new THREE.Vector3(-normal.z, 0, normal.x);
           break;
-      case "B&A":
+      case 'B&A':
           civilOrthVec1 = new THREE.Vector3(-normal.y, normal.x, 0);
           break;
   }
@@ -332,8 +346,8 @@ function convertToCivilStyleSection(normal, distance){
   return result;
 }
 
-function convertToCivilStyleBoxSection(planeEqArr){
-  let planePairs = getPlanePairs(planeEqArr);
+function convertToCivilStyleBoxSection(planeArr){
+  let planePairs = getPlanePairs(planeArr);
   let topPnts = [];
   let btmPnts = [];
 
@@ -361,15 +375,110 @@ function convertToCivilStyleBoxSection(planeEqArr){
     addPointAsSphere(midPoint, 'blue');
   }
 }
+
+function genOppParrallelPlane(plane, bbox){
+  const distVals = bbox.vertices.map(vert => getDistOfPntFromPlane(vert, plane));
+
+  const idxMaxDistVal = distVals.reduce(
+    (iMax, currVal, iCurr, arr) => { 
+      return Math.abs(currVal) > Math.abs(arr[iMax]) ? iCurr : iMax;
+    }, 0
+  );
+
+  const farthestVert = new THREE.Vector3().copy(bbox.vertices[idxMaxDistVal]);
+  
+  const oppParPlane = getPlaneFromVals(
+    plane.a, 
+    plane.b, 
+    plane.c, 
+    (
+      plane.a * farthestVert.x + 
+      plane.b * farthestVert.y + 
+      plane.c * farthestVert.z
+    )
+  );
+
+  addPlane(oppParPlane);
+
+
+  var x = 1;
+
+ 
+  
+}
+
+function isPntInBbox(pnt, bbox, addPoint = true){
+  let xOk = (pnt.x < bbox.max.x) && (pnt.x > bbox.min.x); 
+  let yOk = (pnt.y < bbox.max.y) && (pnt.y > bbox.min.y); 
+  let zOk = (pnt.z < bbox.max.z) && (pnt.z > bbox.min.z);
+  let result = xOk && yOk && zOk;
+  if(addPoint){
+    let inColor = 'red';
+    let outColor = 'green';
+    if(result){
+      addPointAsSphere(pnt, inColor, 0.07);
+    }else{
+      addPointAsSphere(pnt, outColor, 0.07);
+    }
+  }
+  return result;
+}
+
+function getBoundingBoxFromModel(){
+  const bbox = new THREE.Box3();
+  let dice = globals.scene.getObjectByName('dice', true);
+  bbox.expandByObject(dice);
+  let diagonalVector = new THREE.Vector3(
+    bbox.max.x - bbox.min.x,
+    bbox.max.y - bbox.min.y,
+    bbox.max.z - bbox.min.z
+  ).multiplyScalar(0.5);
+  bbox.center = new THREE.Vector3(
+    bbox.min.x,
+    bbox.min.y,
+    bbox.min.z
+  ).add(diagonalVector);
+  bbox.vertices = [
+    new THREE.Vector3(bbox.min.x, bbox.min.y, bbox.min.z),
+    new THREE.Vector3(bbox.max.x, bbox.min.y, bbox.min.z),
+    new THREE.Vector3(bbox.min.x, bbox.max.y, bbox.min.z),
+    new THREE.Vector3(bbox.min.x, bbox.min.y, bbox.max.z),
+    new THREE.Vector3(bbox.max.x, bbox.max.y, bbox.max.z),
+    new THREE.Vector3(bbox.min.x, bbox.max.y, bbox.max.z),
+    new THREE.Vector3(bbox.max.x, bbox.min.y, bbox.max.z),
+    new THREE.Vector3(bbox.max.x, bbox.max.y, bbox.min.z),
+  ]
+  return bbox;
+}
+
+function getDistOfPntFromPlane(pnt, plane){
+  return plane.a*pnt.x + plane.b*pnt.y + plane.c*pnt.z + plane.d;
+}
+
+// ax + by + cz + d = 0
+function getPlaneFromVals(a,b,c,d){
+  const planeNormal = new THREE.Vector3(a,b,c);
+  const planeCenter = new THREE.Vector3().add(new THREE.Vector3().copy(planeNormal).multiplyScalar(-d));
+  const plane = {
+    a : planeNormal.x,
+    b : planeNormal.y,
+    c : planeNormal.z,
+    d : d,
+    normal: planeNormal,
+    center: planeCenter
+  };
+  return plane;
+}
+
 //#endregion
 
 //#region Debug helpers
-function calculateRandomPointsOnPlane(planeEq, numPoints, range, addToScene = false){
+function calculateRandomPointsOnPlane(plane, numPoints, range, addToScene = false){
   let randArr = [];
   for (let i = 0; i < numPoints; i++) {
     let xRand = rand(-range, range);
     let yRand = rand(-range, range);
-    let z = (-planeEq.d - planeEq.a*xRand - planeEq.b*yRand)/planeEq.c;
+    let z = (-plane.d - plane.a*xRand - plane.b*yRand)/plane.c;
     randArr.push(new THREE.Vector3(xRand, yRand,z))
     addPointAsSphere(randArr[i]);
   }
@@ -383,24 +492,24 @@ function calculateRandPerpVector(vector, range){
   return new THREE.Vector3(xRand, yRand, z);
 }
 
-function addPointAsSphere(pos, color = 'yellow'){
-  const geometry = new THREE.SphereGeometry( 0.1, 32, 32 );
+function addPointAsSphere(pos, color = 'yellow', size = 0.1){
+  const geometry = new THREE.SphereGeometry( size , 32, 32 );
   const material = new THREE.MeshBasicMaterial( {color: color} );
   const sphere = new THREE.Mesh( geometry, material);
   sphere.position.set(pos.x,pos.y,pos.z);
   globals.scene.add( sphere );
-}
+}   
 
-function addArrowHelper(vector, origin, length = 8, color = 'green'){
+function addArrowHelper(vector, origin = new THREE.Vector3(), length = 8, color = 'green'){
   let arrow = new THREE.ArrowHelper(vector.normalize(), origin, length, color);
   globals.scene.add(arrow);
 }
 
-function addPlane(planeEq, color = 'green'){
+function addPlane(plane, color = 'green'){
   // plane
-  const planeNormal = new THREE.Vector3(planeEq.a, planeEq.b, planeEq.c); 
-  const newPos = new THREE.Vector3(planeEq.a, planeEq.b, planeEq.c).multiplyScalar(-planeEq.d);
-  const plane = globals.gameObjectManager.createGameObject(globals.scene, 'plane');
+  const planeNormal = plane.normal; 
+  const pos = plane.center;
+  const planeObj = globals.gameObjectManager.createGameObject(globals.scene, 'plane');
   const planeGeometry = new THREE.PlaneGeometry(10, 10);
   const planeMaterial = new THREE.MeshPhongMaterial({
     color: color,
@@ -409,9 +518,15 @@ function addPlane(planeEq, color = 'green'){
     side: THREE.DoubleSide,
   });
   const planeGeo = new THREE.Mesh(planeGeometry, planeMaterial);
-  plane.transform.add(planeGeo);
-  plane.transform.lookAt(planeNormal);
-  plane.transform.position.set(newPos.x, newPos.y, newPos.z);
+  planeObj.transform.add(planeGeo);
+  planeObj.transform.lookAt(planeNormal);
+  planeObj.transform.position.set(pos.x, pos.y, pos.z);
+  addArrowHelper(plane.normal, plane.center, 2, 'red');
+}
+
+function addBbox(object){
+  const box = new THREE.BoxHelper( object, 0xffff00 );
+  globals.scene.add( box );
 }
 //#endregion
 
