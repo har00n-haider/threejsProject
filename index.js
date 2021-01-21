@@ -190,15 +190,36 @@ function display3drepoMesh(clippingPlanes) {
       center: planeCenter
     };
     planeArr.push(plane);  
-    addPlane(plane);
-    //calculateRandomPointsOnPlane(plane,100, 10);
   }
 
+  // Assuming only a single initial plane exists
   const bbox = getBoundingBoxFromModel();
 
-  genOppParrallelPlane(planeArr[0], bbox);
+  const H1Pos = planeArr[0];
+  const H1Neg = genOppParrPlane(H1Pos, bbox);
+  const H2Pos = genAdjOrthPlane(H1Pos, H1Neg, bbox);
+  const H2Neg = null;
+  const H3Pos = null;
+  const H3Neg = null;
+
+
+
+  addPlane(H1Pos);
+  addPlane(H1Neg);
+  addPlane(H2Pos);
 
   //convertToCivilStyleBoxSection(planeArr);
+
+  // const A = new THREE.Vector3(0,0,1);
+  // const B = new THREE.Vector3(0,1,0);
+  // const C = new THREE.Vector3(1,0,0);
+  // const pnt =  new THREE.Vector3();
+  // addPointAsSphere(pnt, 'yellow');
+  // pnt.add(A).add(B).add(C);
+  // addArrowHelper(A, new THREE.Vector3(), A.length())
+  // addArrowHelper(B, new THREE.Vector3().add(A), B.length())
+  // addArrowHelper(C, new THREE.Vector3().add(A).add(B), C.length())
+  // addPointAsSphere(pnt, 'green');
 
 }
 
@@ -376,35 +397,48 @@ function convertToCivilStyleBoxSection(planeArr){
   }
 }
 
-function genOppParrallelPlane(plane, bbox){
-  const distVals = bbox.vertices.map(vert => getDistOfPntFromPlane(vert, plane));
+function genOppParrPlane(plane, bbox){
+  const farPnt = getFarthestPntFromPlane(bbox.vertices, plane)
+  const oppParPlane = getPlaneFromPntNorm(farPnt, plane.normal);
+  return oppParPlane;
+}
 
+function genAdjOrthPlane(plane, oppParPlane, bbox, upDir = new THREE.Vector3(0, 1, 0)){
+  // Figure out the point and normal of the adjacent orth plane
+  // Using the upDir as y axis by default to keep things looking somewhat axis aligned
+  const upDirProjVec = getProjVecOnPlane(upDir, plane);
+  const orthDir = new THREE.Vector3().crossVectors(plane.normal, upDirProjVec);
+  const vecToCenter =  new THREE.Vector3().copy(oppParPlane.center).sub(plane.center);
+  const centerPoint =  new THREE.Vector3().copy(plane.center).add(vecToCenter.multiplyScalar(0.5));
+  const orthPlaneMid = getPlaneFromPntNorm(centerPoint, orthDir);
+
+  const farPnt = getFarthestPntFromPlane(bbox.vertices, orthPlaneMid);
+  const orthPlane = getPlaneFromPntNorm(farPnt, orthDir);
+  return orthPlane;
+}
+
+function getFarthestPntFromPlane(points, plane){
+  const distVals = points.map(vert => getDistOfPntFromPlane(vert, plane));
   const idxMaxDistVal = distVals.reduce(
     (iMax, currVal, iCurr, arr) => { 
       return Math.abs(currVal) > Math.abs(arr[iMax]) ? iCurr : iMax;
     }, 0
   );
+  const farthestPnt = new THREE.Vector3().copy(points[idxMaxDistVal]);
+  return farthestPnt;
+}
 
-  const farthestVert = new THREE.Vector3().copy(bbox.vertices[idxMaxDistVal]);
-  
-  const oppParPlane = getPlaneFromVals(
-    plane.a, 
-    plane.b, 
-    plane.c, 
-    (
-      plane.a * farthestVert.x + 
-      plane.b * farthestVert.y + 
-      plane.c * farthestVert.z
-    )
-  );
-
-  addPlane(oppParPlane);
-
-
-  var x = 1;
-
- 
-  
+function getProjVecOnPlane(vec, plane){
+  // k - original vector
+  // n - plane normal 
+  // kpp - k projected onto plane
+  // kpn - k projected onto n
+  // kpn = k.n/(||n||)^2 . n
+  const k = new THREE.Vector3().copy(vec);
+  const n = new THREE.Vector3().copy(plane.normal);
+  const kpn = (new THREE.Vector3().copy(n)).multiplyScalar(k.dot(n) / (n.length() * n.length()));
+  const kpp = new THREE.Vector3().add(k).sub(kpn);
+  return kpp;
 }
 
 function isPntInBbox(pnt, bbox, addPoint = true){
@@ -455,6 +489,21 @@ function getDistOfPntFromPlane(pnt, plane){
   return plane.a*pnt.x + plane.b*pnt.y + plane.c*pnt.z + plane.d;
 }
 
+function getPlaneFromPntNorm(point, normal){
+  const planeNorm = new THREE.Vector3().copy(normal).normalize();
+  const plane = getPlaneFromVals(
+    planeNorm.x, 
+    planeNorm.y, 
+    planeNorm.z, 
+    (
+      planeNorm.x * point.x + 
+      planeNorm.y * point.y + 
+      planeNorm.z * point.z
+    ) * -1
+  );
+  return plane
+}
+
 // ax + by + cz + d = 0
 function getPlaneFromVals(a,b,c,d){
   const planeNormal = new THREE.Vector3(a,b,c);
@@ -501,11 +550,12 @@ function addPointAsSphere(pos, color = 'yellow', size = 0.1){
 }   
 
 function addArrowHelper(vector, origin = new THREE.Vector3(), length = 8, color = 'green'){
-  let arrow = new THREE.ArrowHelper(vector.normalize(), origin, length, color);
+  const vectorNorm = new THREE.Vector3().copy(vector).normalize();
+  let arrow = new THREE.ArrowHelper(vectorNorm, origin, length, color);
   globals.scene.add(arrow);
 }
 
-function addPlane(plane, color = 'green'){
+function addPlane(plane, color = 'green', addNorm = false){
   // plane
   const planeNormal = plane.normal; 
   const pos = plane.center;
@@ -521,7 +571,9 @@ function addPlane(plane, color = 'green'){
   planeObj.transform.add(planeGeo);
   planeObj.transform.lookAt(planeNormal);
   planeObj.transform.position.set(pos.x, pos.y, pos.z);
-  addArrowHelper(plane.normal, plane.center, 2, 'red');
+  if(addNorm){
+    addArrowHelper(plane.normal, plane.center, 2, 'red');
+  }
 }
 
 function addBbox(object){
