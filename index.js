@@ -154,7 +154,7 @@ function getSectionPlaneFrom3dRepo(){
     // const issueId = '2d6812f0-59da-11eb-bb0d-b34330a480ad'; // 4 plane clip box
     // const issueId = 'd1b73ae0-5b36-11eb-8190-0f3cc630421e'; // section starts outside box
     // const issueId = '89ace260-5c06-11eb-95bf-77794e8460c9'; // 4 planes - two not parallel
-    // const issueId = 'a4a8da10-5c15-11eb-82c1-3d258507f8b6'; // half section - two planes not parallel
+    const issueId = 'a4a8da10-5c15-11eb-82c1-3d258507f8b6'; // diag half section - two planes not parallel
 
     
     const teamSpace = 'HH';
@@ -186,66 +186,34 @@ function display3drepoMesh(clippingPlanes) {
       repoPlane.normal[2],
       repoPlane.distance
     );
+    plane.source = '3drepo';
     planeArr.push(plane);
   }
-
+  
   const faces = mapPlanesToFaces(planeArr);
+  fillMissingFaces(faces);
+  addFaces(faces)
 
+  // Manual
   const bbox = getBoundingBoxFromModel();
-
-  let fullFaces = [];
-  // Fill as many orth faces as we can, need at least one full face
-  for(const face of faces){
-    if(face.pos != null && face.neg == null){
-      face.neg = genOppParrPlane(face.pos, bbox);
-    }
-    else if(face.pos != null && face.neg == null){
-      face.pos = genOppParrPlane(face.neg, bbox);
-    }
-    if(face.pas != null && face.neg != null){
-      fullFace.push(face);
-    }
-  }
-  // Fill in the rest
-  for(const face of faces){
-    if(face.pos == null && face.neg == null){
-      if(fullFaces.length == 1){
-        // Use default up direction
-        face.neg = genAdjOrthPlane(fullFace[0].pos, fullFace[0].neg);
-        face.pos = genOppParrPlane(face.neg, bbox);
-        fullFace.push(face);
-      }
-      else{
-        // Use second full face normal as up dir
-        face.neg = genAdjOrthPlane(fullFace[0].pos, fullFace[0].neg, fullFace[1].normal);
-        face.pos = genOppParrPlane(face.neg, bbox);
-        fullFace.push(face);
-      }
-    }
-  }
-
-  addFaces(faces);
-
-  // const H1Pos = planeArr[0];
-  // const H1Neg = genOppParrPlane(H1Pos, bbox);
-  // const H2Pos = genAdjOrthPlane(H1Pos, H1Neg, bbox);
-  // const H2Neg = genOppParrPlane(H2Pos, bbox);
-  // const H3Pos = genAdjOrthPlane(H2Pos, H2Neg, bbox, H1Pos.normal);
-  // const H3Neg = genOppParrPlane(H3Pos, bbox);
-
-  // const planeArr2 = [];
-
-  // planeArr2.push(H1Pos);
-  // planeArr2.push(H1Neg);
-  // planeArr2.push(H2Pos);
-  // planeArr2.push(H2Neg);
-  // planeArr2.push(H3Pos);
-  // planeArr2.push(H3Neg);
+  const manFaces = [];
+  manFaces.push({
+      pos : faces[0].pos,
+      neg : genOppParrPlane(faces[0].pos, bbox),
+  });
+  manFaces.push({
+    pos : faces[1].pos,
+    neg : genOppParrPlane(faces[1].pos, bbox),
+  });
+  let pos3 = genAdjOrthPlane(manFaces[1].pos, manFaces[1].neg, bbox, manFaces[0].pos.normal);
+  let neg3 = genOppParrPlane(pos3, bbox);
+  manFaces.push({
+    pos : pos3,
+    neg : neg3,
+  });
+  //addFaces(manFaces)
 
   convertToCivilStyleBoxSection(faces);
-
-
-
 }
 
 function loadModel(){
@@ -278,6 +246,42 @@ function loadModel(){
 //#endregion
 
 //#region Plane conversion functions
+
+function fillMissingFaces(faces){
+  const bbox = getBoundingBoxFromModel();
+  let fullFaces = [];
+  // Fill as many orth faces as we can, need at least one full face
+  for(const face of faces){
+    if(face.pos != null && face.neg == null){
+      face.neg = genOppParrPlane(face.pos, bbox);
+    }
+    else if(face.pos != null && face.neg == null){
+      face.pos = genOppParrPlane(face.neg, bbox);
+    }
+    if(face.pos != null && face.neg != null){
+      fullFaces.push(face);
+    }
+  }
+  if(fullFaces.length !=3 ){
+    // Fill in the rest
+    for(const face of faces){
+      if(face.pos == null && face.neg == null){
+        if(fullFaces.length == 1){
+          // Use default up direction
+          face.neg = genAdjOrthPlane(fullFaces[0].pos, fullFaces[0].neg, bbox);
+          face.pos = genOppParrPlane(face.neg, bbox);
+          fullFaces.push(face);
+        }
+        else if (fullFaces.length > 1){
+          // Use second full face normal as up dir
+          face.neg = genAdjOrthPlane(fullFaces[0].pos, fullFaces[0].neg, bbox, fullFaces[1].normal);
+          face.pos = genOppParrPlane(face.neg, bbox);
+          fullFaces.push(face);
+        }
+      }
+    }
+  }
+}
 
 function mapPlanesToFaces(planesArr){
   const f2PlnMap = [];
@@ -317,6 +321,12 @@ function mapPlanesToFaces(planesArr){
   }
   while(planesArr.length > 0){
     seekAndDestroy();
+  }
+  while(f2PlnMap.length < 3){
+    f2PlnMap.push({
+      pos : null,
+      neg : null,
+    });
   }
   return f2PlnMap;
 }
@@ -440,8 +450,10 @@ function convertToCivilStyleBoxSection(planePairs){
 }
 
 function genOppParrPlane(plane, bbox){
-  const farPnt = getFarthestPntFromPlane(bbox.vertices, plane)
+  const farPnt = getFarthestPntFromPlane(bbox.vertices, plane);
+
   const oppParPlane = getPlaneFromPntNorm(farPnt, plane.normal);
+  oppParPlane.source = 'generated';
   return oppParPlane;
 }
 
@@ -456,12 +468,13 @@ function genAdjOrthPlane(plane, oppParPlane, bbox, upDir = new THREE.Vector3(0, 
 
   const farPnt = getFarthestPntFromPlane(bbox.vertices, orthPlaneMid);
   const orthPlane = getPlaneFromPntNorm(farPnt, orthDir);
+  orthPlane.source = 'generated';
   return orthPlane;
 }
 
 function getFarthestPntFromPlane(points, plane){
   let distVals = points.map(vert => getDistOfPntFromPlane(vert, plane));
-  distVals = distVals.filter(val => val < 0 );
+  //distVals = distVals.filter(val => val < 0 );
   const idxMaxDistVal = distVals.reduce(
     (iMax, currVal, iCurr, arr) => {
       return Math.abs(currVal) > Math.abs(arr[iMax]) ? iCurr : iMax;
@@ -598,15 +611,17 @@ function addArrowHelper(vector, origin = new THREE.Vector3(), length = 8, color 
   globals.scene.add(arrow);
 }
 
-function addPlane(plane, color = 'green', addNorm = true){
-  // plane
+function addPlane(plane, color = 'green', addNorm = true, size = 10){
+  if (plane.source == 'generated'){
+    size = 7;
+  }
   const planeNormal = plane.normal;
   const pos = plane.center;
   const planeObj = globals.gameObjectManager.createGameObject(globals.scene, 'plane');
-  const planeGeometry = new THREE.PlaneGeometry(10, 10);
+  const planeGeometry = new THREE.PlaneGeometry(size, size);
   const planeMaterial = new THREE.MeshPhongMaterial({
     color: color,
-    opacity: 0.5,
+    opacity: 0.1,
     transparent: true,
     side: THREE.DoubleSide,
   });
@@ -615,7 +630,7 @@ function addPlane(plane, color = 'green', addNorm = true){
   planeObj.transform.lookAt(planeNormal);
   planeObj.transform.position.set(pos.x, pos.y, pos.z);
   if(addNorm){
-    addArrowHelper(plane.normal, plane.center, 2, 'red');
+    addArrowHelper(plane.normal, plane.center, 0.5, color);
   }
 }
 
@@ -625,15 +640,14 @@ function addBbox(object){
 }
 
 function addFaces(faces){
-  // Just for visualisation
   let color = 'grey';
   for (let i = 0; i < faces.length; i++){
     switch(i){
       case 0:
-        color = 'green';
+        color = 'red';
         break;
       case 1:
-        color = 'red';
+        color = 'green';
         break;
       case 2:
         color = 'blue';
