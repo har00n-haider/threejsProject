@@ -146,23 +146,24 @@ function getSectionPlaneFrom3dRepo(){
     const modelId = '43dac390-5668-11eb-901c-8dcbf0759038';
     // const issueId = '8f802f30-567f-11eb-b14c-331a8baa9a5e'; // 5-4-1
     // const issueId = '602cb4b0-567f-11eb-b14c-331a8baa9a5e'; // in half
-    const issueId = 'afe494c0-5669-11eb-b14c-331a8baa9a5e'; // 3-1-2
+    // const issueId = 'afe494c0-5669-11eb-b14c-331a8baa9a5e'; // 3-1-2
     // const issueId = 'e23cc080-5729-11eb-b14c-331a8baa9a5e'; // 3-5-1
     // const issueId = 'e49e9360-599c-11eb-bb0d-b34330a480ad'; // full clip box -  5-3-1
     // const issueId = '35992d00-59d1-11eb-9e73-c3cab698f37e'; // full clip box - axis aligned
-    // const issueId = 'a8794560-59d8-11eb-9e73-c3cab698f37e'; // full clip box - straight down the middle 
-    // const issueId = '2d6812f0-59da-11eb-bb0d-b34330a480ad'; // 4 plane clip box 
+    // const issueId = 'a8794560-59d8-11eb-9e73-c3cab698f37e'; // full clip box - straight down the middle
+    // const issueId = '2d6812f0-59da-11eb-bb0d-b34330a480ad'; // 4 plane clip box
     // const issueId = 'd1b73ae0-5b36-11eb-8190-0f3cc630421e'; // section starts outside box
+    const issueId = '89ace260-5c06-11eb-95bf-77794e8460c9'; // 4 planes - two not parallel
 
     const teamSpace = 'HH';
-    const urlBase = 'https://api1.staging.dev.3drepo.io/api' 
+    const urlBase = 'https://api1.staging.dev.3drepo.io/api'
     const url = urlBase.concat(
-      '/', 
-      teamSpace, '/', 
-      modelId, '/', 
+      '/',
+      teamSpace, '/',
+      modelId, '/',
       'issues', '/',
       issueId, '?key=', apiKey
-    ); 
+    );
     fetch(url)
       .then((response) => response.json())
       .then((data) => {
@@ -175,22 +176,19 @@ function getSectionPlaneFrom3dRepo(){
 }
 
 function display3drepoMesh(clippingPlanes) {
-  let planeArr = []; 
+  let planeArr = [];
   for (const repoPlane of clippingPlanes) {
-    const planeNormal = repoApiToThreejs(repoPlane.normal);
-    // Plane from 3dRepo api maps to:
-    // ax + by + cz + d = 0
-    const planeCenter = new THREE.Vector3().add(new THREE.Vector3().copy(planeNormal).multiplyScalar(-repoPlane.distance));
-    const plane = {
-      a : planeNormal.x,
-      b : planeNormal.y,
-      c : planeNormal.z,
-      d : repoPlane.distance,
-      normal: planeNormal,
-      center: planeCenter
-    };
-    planeArr.push(plane);  
+    const plane = getPlaneFromVals(
+      repoPlane.normal[0],
+      repoPlane.normal[1],
+      repoPlane.normal[2],
+      repoPlane.distance
+    );
+    planeArr.push(plane);
   }
+
+  const faceToPlaneMap = mapPlanesToFaces(planeArr);
+
 
   // Assuming only a single initial plane exists
   const bbox = getBoundingBoxFromModel();
@@ -198,28 +196,29 @@ function display3drepoMesh(clippingPlanes) {
   const H1Pos = planeArr[0];
   const H1Neg = genOppParrPlane(H1Pos, bbox);
   const H2Pos = genAdjOrthPlane(H1Pos, H1Neg, bbox);
-  const H2Neg = null;
-  const H3Pos = null;
-  const H3Neg = null;
-
-
+  const H2Neg = genOppParrPlane(H2Pos, bbox);
+  const H3Pos = genAdjOrthPlane(H2Pos, H2Neg, bbox, H1Pos.normal);
+  const H3Neg = genOppParrPlane(H3Pos, bbox);
 
   addPlane(H1Pos);
   addPlane(H1Neg);
   addPlane(H2Pos);
+  addPlane(H2Neg);
+  addPlane(H3Pos);
+  addPlane(H3Neg);
 
-  //convertToCivilStyleBoxSection(planeArr);
+  const planeArr2 = [];
 
-  // const A = new THREE.Vector3(0,0,1);
-  // const B = new THREE.Vector3(0,1,0);
-  // const C = new THREE.Vector3(1,0,0);
-  // const pnt =  new THREE.Vector3();
-  // addPointAsSphere(pnt, 'yellow');
-  // pnt.add(A).add(B).add(C);
-  // addArrowHelper(A, new THREE.Vector3(), A.length())
-  // addArrowHelper(B, new THREE.Vector3().add(A), B.length())
-  // addArrowHelper(C, new THREE.Vector3().add(A).add(B), C.length())
-  // addPointAsSphere(pnt, 'green');
+  planeArr2.push(H1Pos);
+  planeArr2.push(H1Neg);
+  planeArr2.push(H2Pos);
+  planeArr2.push(H2Neg);
+  planeArr2.push(H3Pos);
+  planeArr2.push(H3Neg);
+
+  //convertToCivilStyleBoxSection(planeArr2);
+
+
 
 }
 
@@ -235,7 +234,7 @@ function loadModel(){
         opacity: 0.2,
         transparent: true,
       });
-      object.children[0].material = modelMat; 
+      object.children[0].material = modelMat;
       globals.scene.add( object );
       addBbox(object);
       getSectionPlaneFrom3dRepo();
@@ -253,12 +252,23 @@ function loadModel(){
 //#endregion
 
 //#region Plane conversion functions
-function repoApiToThreejs(vector) {
-  return new THREE.Vector3(
-    vector[0],
-    vector[1],
-    vector[2],
-  );
+
+function mapPlanesToFaces(planesArr){
+  const faceToPlaneMap = new Map();
+  faceToPlaneMap.set("H1Pos", null)
+  faceToPlaneMap.set("H1Neg", null)
+  faceToPlaneMap.set("H2Pos", null)
+  faceToPlaneMap.set("H2Neg", null)
+  faceToPlaneMap.set("H3Pos", null)
+  faceToPlaneMap.set("H3Neg", null)
+  if(planesArr.length <= 0){
+    return faceToPlaneMap;
+  }
+  if(planesArr.length >= 1){
+    const planePairs = getPlanePairs(planesArr);
+    let x = 1;
+  }
+
 }
 
 function arePlanesParrallel(plane1, plane2){
@@ -283,6 +293,7 @@ function arePlanesParrallel(plane1, plane2){
   }
 }
 
+// Solving three linear equations
 function getPointFromPlanes(plane1, plane2, plane3){
   const A = new THREE.Matrix3();
   A.set(
@@ -301,19 +312,49 @@ function getPointFromPlanes(plane1, plane2, plane3){
 }
 
 function getPlanePairs(planesArr){
-  let planePairs = [];
-  while(planesArr.length > 0){
-    for (let i = 1; i < planesArr.length; i++) {
-      if(arePlanesParrallel(planesArr[0], planesArr[i])){
+  const planePairs = [];
+  planesArr.forEach(plane => {
+    plane.checkedForPair = false;
+    plane.foundPair = false;
+  });
+  while(planesArr.filter(plane => plane.checkedForPair == true).length != planesArr.length){
+    let currPlane = null;
+    for (let i = 0; i < planesArr.length; i++) {
+      if(currPlane == null)
+      {
+        if(planesArr[i].checkedForPair == false)
+        {
+          currPlane = planesArr[i];
+        }
+        break;
+      }
+      if(arePlanesParrallel(currPlane, planesArr[i])){
         planePairs.push({
-          p1 : planesArr[0],
+          p1 : currPlane,
           p2 : planesArr[i]
         });
-        planesArr.splice(0, 1);
-        planesArr.splice(i-1, 1);
+        currPlane.checkedForPair = true;
+        currPlane.foundPair = true;
+        planesArr[i].checkedForPair = true;
+        planesArr[i].foundPair = true;
+        currPlane = null;
         break;
       };
+      if(i == (planesArr - 1)){
+        currPlane.checkedForPair = true;
+        currPlane = null;
+      }
     }
+  }
+  for (plane of planesArr.filter(plane => plane.foundPair = false)){
+    planePairs.push({
+      p1 : plane,
+      p2 : null
+    });
+  }
+  // clean up
+  for (plane of planesArr){
+
   }
   return planePairs;
 }
@@ -323,7 +364,7 @@ function convertToCivilStyleSection(normal, distance){
   // using logic from an answere here: https://math.stackexchange.com/questions/137362/how-to-find-perpendicular-vector-to-another-vector
   // NOTE: probably need to project the editor UP direction
   // on to the plone to get the first orthogonal vector
-  const moduliOfOptions = 
+  const moduliOfOptions =
   {
     'C&B' : normal.z*normal.z + normal.y*normal.y,
     'C&A' : normal.z*normal.z + normal.x*normal.x,
@@ -358,12 +399,12 @@ function convertToCivilStyleSection(normal, distance){
   let p1 = new THREE.Vector3().add(normal.multiplyScalar(distance));
   let p2 = new THREE.Vector3().add(p1).add(civilOrthVec2);
 
-  let result = 
+  let result =
   {
     sectionUp : civilOrthVec1,
     point1: p1,
-    point2: p2, 
-  } 
+    point2: p2,
+  }
   return result;
 }
 
@@ -372,16 +413,16 @@ function convertToCivilStyleBoxSection(planeArr){
   let topPnts = [];
   let btmPnts = [];
 
-  topPnts.push(getPointFromPlanes(planePairs[0].p1, planePairs[1].p1, planePairs[2].p1)); 
-  topPnts.push(getPointFromPlanes(planePairs[0].p1, planePairs[1].p2, planePairs[2].p1)); 
-  topPnts.push(getPointFromPlanes(planePairs[0].p1, planePairs[1].p1, planePairs[2].p2)); 
-  topPnts.push(getPointFromPlanes(planePairs[0].p1, planePairs[1].p2, planePairs[2].p2)); 
-  
-  btmPnts.push(getPointFromPlanes(planePairs[0].p2, planePairs[1].p1, planePairs[2].p1)); 
-  btmPnts.push(getPointFromPlanes(planePairs[0].p2, planePairs[1].p2, planePairs[2].p1)); 
-  btmPnts.push(getPointFromPlanes(planePairs[0].p2, planePairs[1].p1, planePairs[2].p2)); 
-  btmPnts.push(getPointFromPlanes(planePairs[0].p2, planePairs[1].p2, planePairs[2].p2)); 
-  
+  topPnts.push(getPointFromPlanes(planePairs[0].p1, planePairs[1].p1, planePairs[2].p1));
+  topPnts.push(getPointFromPlanes(planePairs[0].p1, planePairs[1].p2, planePairs[2].p1));
+  topPnts.push(getPointFromPlanes(planePairs[0].p1, planePairs[1].p1, planePairs[2].p2));
+  topPnts.push(getPointFromPlanes(planePairs[0].p1, planePairs[1].p2, planePairs[2].p2));
+
+  btmPnts.push(getPointFromPlanes(planePairs[0].p2, planePairs[1].p1, planePairs[2].p1));
+  btmPnts.push(getPointFromPlanes(planePairs[0].p2, planePairs[1].p2, planePairs[2].p1));
+  btmPnts.push(getPointFromPlanes(planePairs[0].p2, planePairs[1].p1, planePairs[2].p2));
+  btmPnts.push(getPointFromPlanes(planePairs[0].p2, planePairs[1].p2, planePairs[2].p2));
+
   for (let pntCtr = 0; pntCtr < topPnts.length; pntCtr ++) {
     let p1 = new THREE.Vector3(topPnts[pntCtr].x, topPnts[pntCtr].y, topPnts[pntCtr].z);
     let p2 = new THREE.Vector3(btmPnts[pntCtr].x, btmPnts[pntCtr].y, btmPnts[pntCtr].z);
@@ -420,7 +461,7 @@ function genAdjOrthPlane(plane, oppParPlane, bbox, upDir = new THREE.Vector3(0, 
 function getFarthestPntFromPlane(points, plane){
   const distVals = points.map(vert => getDistOfPntFromPlane(vert, plane));
   const idxMaxDistVal = distVals.reduce(
-    (iMax, currVal, iCurr, arr) => { 
+    (iMax, currVal, iCurr, arr) => {
       return Math.abs(currVal) > Math.abs(arr[iMax]) ? iCurr : iMax;
     }, 0
   );
@@ -430,7 +471,7 @@ function getFarthestPntFromPlane(points, plane){
 
 function getProjVecOnPlane(vec, plane){
   // k - original vector
-  // n - plane normal 
+  // n - plane normal
   // kpp - k projected onto plane
   // kpn - k projected onto n
   // kpn = k.n/(||n||)^2 . n
@@ -442,8 +483,8 @@ function getProjVecOnPlane(vec, plane){
 }
 
 function isPntInBbox(pnt, bbox, addPoint = true){
-  let xOk = (pnt.x < bbox.max.x) && (pnt.x > bbox.min.x); 
-  let yOk = (pnt.y < bbox.max.y) && (pnt.y > bbox.min.y); 
+  let xOk = (pnt.x < bbox.max.x) && (pnt.x > bbox.min.x);
+  let yOk = (pnt.y < bbox.max.y) && (pnt.y > bbox.min.y);
   let zOk = (pnt.z < bbox.max.z) && (pnt.z > bbox.min.z);
   let result = xOk && yOk && zOk;
   if(addPoint){
@@ -492,12 +533,12 @@ function getDistOfPntFromPlane(pnt, plane){
 function getPlaneFromPntNorm(point, normal){
   const planeNorm = new THREE.Vector3().copy(normal).normalize();
   const plane = getPlaneFromVals(
-    planeNorm.x, 
-    planeNorm.y, 
-    planeNorm.z, 
+    planeNorm.x,
+    planeNorm.y,
+    planeNorm.z,
     (
-      planeNorm.x * point.x + 
-      planeNorm.y * point.y + 
+      planeNorm.x * point.x +
+      planeNorm.y * point.y +
       planeNorm.z * point.z
     ) * -1
   );
@@ -547,7 +588,7 @@ function addPointAsSphere(pos, color = 'yellow', size = 0.1){
   const sphere = new THREE.Mesh( geometry, material);
   sphere.position.set(pos.x,pos.y,pos.z);
   globals.scene.add( sphere );
-}   
+}
 
 function addArrowHelper(vector, origin = new THREE.Vector3(), length = 8, color = 'green'){
   const vectorNorm = new THREE.Vector3().copy(vector).normalize();
@@ -557,7 +598,7 @@ function addArrowHelper(vector, origin = new THREE.Vector3(), length = 8, color 
 
 function addPlane(plane, color = 'green', addNorm = false){
   // plane
-  const planeNormal = plane.normal; 
+  const planeNormal = plane.normal;
   const pos = plane.center;
   const planeObj = globals.gameObjectManager.createGameObject(globals.scene, 'plane');
   const planeGeometry = new THREE.PlaneGeometry(10, 10);
