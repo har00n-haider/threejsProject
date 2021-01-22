@@ -144,6 +144,7 @@ function getSectionPlaneFrom3dRepo(){
     // getting the section plane data from 3drepo
     const apiKey = '670f65dd5a45cc01dc97d771ffad2b35';
     const modelId = '43dac390-5668-11eb-901c-8dcbf0759038';
+    // Clip dir -1
     // const issueId = '8f802f30-567f-11eb-b14c-331a8baa9a5e'; // 1 plane - 5-4-1 - back end
     // const issueId = '229498c0-5c8d-11eb-82c1-3d258507f8b6'; // 1 plane - 3-2-1 - front end 
     // const issueId = '602cb4b0-567f-11eb-b14c-331a8baa9a5e'; // 1 plane - in half
@@ -157,7 +158,10 @@ function getSectionPlaneFrom3dRepo(){
     // const issueId = '89ace260-5c06-11eb-95bf-77794e8460c9'; // 4 plane - two not parallel
     // const issueId = 'a4a8da10-5c15-11eb-82c1-3d258507f8b6'; // 2 plane - diag half section - two planes not parallel
     // const issueId = 'e10f9ed0-5c92-11eb-82c1-3d258507f8b6'; // 3 plane - bottom only 
-    const issueId = '6a9fb9e0-5c94-11eb-82c1-3d258507f8b6'; // 5 plane - 3-2 near side
+    // const issueId = '6a9fb9e0-5c94-11eb-82c1-3d258507f8b6'; // 5 plane - 3-2 near side
+    // const issueId = '3180fd50-5c9d-11eb-82c1-3d258507f8b6'; // 1 plane - diagonal cut -ve clip dir (farthest point behind)
+    // const issueId = 'e3bd6670-5ca2-11eb-999e-393f16405674'; // 4 plane - 2-4-6  corner box clip, all -ve clip directions
+    const issueId = '9ebeef70-5ca3-11eb-82c1-3d258507f8b6'; // 6 plane - 3-1-2 quarter clip some +ve clipDir
 
     const teamSpace = 'HH';
     const urlBase = 'https://api1.staging.dev.3drepo.io/api'
@@ -186,9 +190,10 @@ function display3drepoMesh(clippingPlanes) {
       repoPlane.normal[0],
       repoPlane.normal[1],
       repoPlane.normal[2],
-      repoPlane.distance
+      repoPlane.distance,
+      repoPlane.clipDirection,
+      '3drepo',
     );
-    plane.source = '3drepo';
     planeArr.push(plane);
   }
   
@@ -204,19 +209,20 @@ function display3drepoMesh(clippingPlanes) {
     manFaces.push({
         pos : faces[0].pos,
         neg : genOppParrPlane(faces[0].pos, bbox),
-    });
-    manFaces.push({
-      pos : faces[1].pos,
-      neg : genOppParrPlane(faces[1].pos, bbox),
-    });
-    let pos3 = genAdjOrthPlane(manFaces[1].pos, manFaces[1].neg, bbox, manFaces[0].pos.normal);
-    let neg3 = genOppParrPlane(pos3, bbox);
-    manFaces.push({
-      pos : pos3,
-      neg : neg3,
-    });
+        // neg : null,
+      });
+    // manFaces.push({
+    //   pos : faces[1].pos,
+    //   neg : genOppParrPlane(faces[1].pos, bbox),
+    // });
+    // let pos3 = genAdjOrthPlane(manFaces[1].pos, manFaces[1].neg, bbox, manFaces[0].pos.normal);
+    // let neg3 = genOppParrPlane(pos3, bbox);
+    // manFaces.push({
+    //   pos : pos3,
+    //   neg : neg3,
+    // });
     addFaces(manFaces)
-    convertToCivilStyleBoxSection(manFaces);
+    // convertToCivilStyleBoxSection(manFaces);
   }
 
 }
@@ -469,9 +475,7 @@ function convertToCivilStyleBoxSection(planePairs){
 
 function genOppParrPlane(plane, bbox){
   const farPnt = getFarthestPntFromPlane(bbox.vertices, plane);
-
   const oppParPlane = getPlaneFromPntNorm(farPnt, plane.normal);
-  oppParPlane.source = 'generated';
   return oppParPlane;
 }
 
@@ -486,20 +490,31 @@ function genAdjOrthPlane(plane, oppParPlane, bbox, upDir = new THREE.Vector3(0, 
 
   const farPnt = getFarthestPntFromPlane(bbox.vertices, orthPlaneMid);
   const orthPlane = getPlaneFromPntNorm(farPnt, orthDir);
-  orthPlane.source = 'generated';
   return orthPlane;
 }
 
 function getFarthestPntFromPlane(points, plane){
-  let distVals = points.map(vert => getDistOfPntFromPlane(vert, plane));
-  //distVals = distVals.filter(val => val < 0 );
-  const idxMaxDistVal = distVals.reduce(
+  let distPairs = points.map((vert) => {
+    return { point : vert, dist: getDistOfPntFromPlane(vert, plane)};
+  });
+  // Taking into account the clip direction to choose the farthest point
+  if(plane.source == '3drepo'){
+    distPairs = distPairs.filter(pair => { 
+      if( plane.clipDir < 0){
+        return pair.dist > 0 ;
+      }
+      else{
+        return pair.dist < 0;
+      }
+    });
+  }
+  const idxMaxDistVal = distPairs.reduce(
     (iMax, currVal, iCurr, arr) => {
-      return Math.abs(currVal) > Math.abs(arr[iMax]) ? iCurr : iMax;
+      return Math.abs(currVal.dist) > Math.abs(arr[iMax].dist) ? iCurr : iMax;
     }, 0
   );
-  const farthestPnt = new THREE.Vector3().copy(points[idxMaxDistVal]);
-  return farthestPnt;
+  const farPnt = new THREE.Vector3().copy(distPairs[idxMaxDistVal].point);
+  return farPnt;
 }
 
 function getProjVecOnPlane(vec, plane){
@@ -579,7 +594,7 @@ function getPlaneFromPntNorm(point, normal){
 }
 
 // ax + by + cz + d = 0
-function getPlaneFromVals(a,b,c,d){
+function getPlaneFromVals(a,b,c,d, clipDir = -1, source = 'generated'){
   const planeNormal = new THREE.Vector3(a,b,c);
   const planeCenter = new THREE.Vector3().add(new THREE.Vector3().copy(planeNormal).multiplyScalar(-d));
   const plane = {
@@ -590,6 +605,8 @@ function getPlaneFromVals(a,b,c,d){
     normal: planeNormal,
     center: planeCenter
   };
+  plane.source = source;
+  plane.clipDir = clipDir;
   return plane;
 }
 
