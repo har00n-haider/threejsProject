@@ -144,17 +144,20 @@ function getSectionPlaneFrom3dRepo(){
     // getting the section plane data from 3drepo
     const apiKey = '670f65dd5a45cc01dc97d771ffad2b35';
     const modelId = '43dac390-5668-11eb-901c-8dcbf0759038';
-    // const issueId = '8f802f30-567f-11eb-b14c-331a8baa9a5e'; // 5-4-1 - back end - [FAIL]
-    // const issueId = '602cb4b0-567f-11eb-b14c-331a8baa9a5e'; // in half - [FAIL]
-    // const issueId = 'afe494c0-5669-11eb-b14c-331a8baa9a5e'; // 3-1-2
-    // const issueId = 'e23cc080-5729-11eb-b14c-331a8baa9a5e'; // 3-5-1
-    // const issueId = 'e49e9360-599c-11eb-bb0d-b34330a480ad'; // full clip box -  5-3-1
-    // const issueId = '35992d00-59d1-11eb-9e73-c3cab698f37e'; // full clip box - axis aligned
-    // const issueId = 'a8794560-59d8-11eb-9e73-c3cab698f37e'; // full clip box - straight down the middle
-    // const issueId = '2d6812f0-59da-11eb-bb0d-b34330a480ad'; // 4 plane clip box - [FAIL]
-    // const issueId = 'd1b73ae0-5b36-11eb-8190-0f3cc630421e'; // section starts outside box - [FAIL]
-    // const issueId = '89ace260-5c06-11eb-95bf-77794e8460c9'; // 4 planes - two not parallel
-    // const issueId = 'a4a8da10-5c15-11eb-82c1-3d258507f8b6'; // diag half section - two planes not parallel
+    // const issueId = '8f802f30-567f-11eb-b14c-331a8baa9a5e'; // 1 plane - 5-4-1 - back end
+    // const issueId = '229498c0-5c8d-11eb-82c1-3d258507f8b6'; // 1 plane - 3-2-1 - front end 
+    // const issueId = '602cb4b0-567f-11eb-b14c-331a8baa9a5e'; // 1 plane - in half
+    // const issueId = 'afe494c0-5669-11eb-b14c-331a8baa9a5e'; // 1 plane - 3-1-2
+    // const issueId = 'e23cc080-5729-11eb-b14c-331a8baa9a5e'; // 1 plane - 3-5-1
+    // const issueId = 'e49e9360-599c-11eb-bb0d-b34330a480ad'; // 6 plane - 5-3-1
+    // const issueId = '35992d00-59d1-11eb-9e73-c3cab698f37e'; // 6 plane - axis aligned
+    // const issueId = 'a8794560-59d8-11eb-9e73-c3cab698f37e'; // 6 plane - straight down the middle
+    // const issueId = '2d6812f0-59da-11eb-bb0d-b34330a480ad'; // 4 plane - clip box
+    // const issueId = 'd1b73ae0-5b36-11eb-8190-0f3cc630421e'; // 1 plane - section starts outside box
+    // const issueId = '89ace260-5c06-11eb-95bf-77794e8460c9'; // 4 plane - two not parallel
+    // const issueId = 'a4a8da10-5c15-11eb-82c1-3d258507f8b6'; // 2 plane - diag half section - two planes not parallel
+    // const issueId = 'e10f9ed0-5c92-11eb-82c1-3d258507f8b6'; // 3 plane - bottom only 
+    const issueId = '6a9fb9e0-5c94-11eb-82c1-3d258507f8b6'; // 5 plane - 3-2 near side
 
     const teamSpace = 'HH';
     const urlBase = 'https://api1.staging.dev.3drepo.io/api'
@@ -192,27 +195,30 @@ function display3drepoMesh(clippingPlanes) {
   const faces = mapPlanesToFaces(planeArr);
   fillMissingFaces(faces);
   addFaces(faces)
+  convertToCivilStyleBoxSection(faces);
 
   // Manual
-  const bbox = getBoundingBoxFromModel();
-  const manFaces = [];
-  manFaces.push({
-      pos : faces[0].pos,
-      neg : genOppParrPlane(faces[0].pos, bbox),
-  });
-  manFaces.push({
-    pos : faces[1].pos,
-    neg : genOppParrPlane(faces[1].pos, bbox),
-  });
-  let pos3 = genAdjOrthPlane(manFaces[1].pos, manFaces[1].neg, bbox, manFaces[0].pos.normal);
-  let neg3 = genOppParrPlane(pos3, bbox);
-  manFaces.push({
-    pos : pos3,
-    neg : neg3,
-  });
-  //addFaces(manFaces)
+  if(false){
+    const bbox = getBoundingBoxFromModel();
+    const manFaces = [];
+    manFaces.push({
+        pos : faces[0].pos,
+        neg : genOppParrPlane(faces[0].pos, bbox),
+    });
+    manFaces.push({
+      pos : faces[1].pos,
+      neg : genOppParrPlane(faces[1].pos, bbox),
+    });
+    let pos3 = genAdjOrthPlane(manFaces[1].pos, manFaces[1].neg, bbox, manFaces[0].pos.normal);
+    let neg3 = genOppParrPlane(pos3, bbox);
+    manFaces.push({
+      pos : pos3,
+      neg : neg3,
+    });
+    addFaces(manFaces)
+    convertToCivilStyleBoxSection(manFaces);
+  }
 
-  convertToCivilStyleBoxSection(faces);
 }
 
 function loadModel(){
@@ -248,6 +254,11 @@ function loadModel(){
 
 function fillMissingFaces(faces){
   const bbox = getBoundingBoxFromModel();
+  const axisVecs = [
+    new THREE.Vector3(1,0,0),
+    new THREE.Vector3(0,1,0),
+    new THREE.Vector3(0,0,1)
+  ];
   let fullFaces = [];
   // Fill as many orth faces as we can, need at least one full face
   for(const face of faces){
@@ -266,14 +277,22 @@ function fillMissingFaces(faces){
     for(const face of faces){
       if(face.pos == null && face.neg == null){
         if(fullFaces.length == 1){
-          // Use default up direction
-          face.neg = genAdjOrthPlane(fullFaces[0].pos, fullFaces[0].neg, bbox);
+          // Choose an axis orthogonal vector that is not parallel to full face
+          let chosenAxisVec = axisVecs[0];
+          for (let i = 1; i < axisVecs.length; i++) {
+            if(areVec3sParallel(fullFaces[0].pos.normal, chosenAxisVec)){
+              break;
+            }
+            chosenAxisVec = axisVecs[i];
+          }
+          face.neg = genAdjOrthPlane(fullFaces[0].pos, fullFaces[0].neg, bbox, chosenAxisVec);
           face.pos = genOppParrPlane(face.neg, bbox);
           fullFaces.push(face);
         }
         else if (fullFaces.length > 1){
-          // Use second full face normal as up dir
-          face.neg = genAdjOrthPlane(fullFaces[0].pos, fullFaces[0].neg, bbox, fullFaces[1].normal);
+          // Use first full face as the origin plane to go orthogonal two 
+          // and the second full face normal as up dir
+          face.neg = genAdjOrthPlane(fullFaces[0].pos, fullFaces[0].neg, bbox, fullFaces[1].pos.normal);
           face.pos = genOppParrPlane(face.neg, bbox);
           fullFaces.push(face);
         }
@@ -296,7 +315,7 @@ function mapPlanesToFaces(planesArr){
     let pairFound = false;
     if (planesArr.length > 1){
       for (let i = 1; i < planesArr.length; i++) {
-        if(arePlanesParrallel(p, planesArr[i])){
+        if(areVec3sParallel(p.normal, planesArr[i].normal)){
           f2PlnMap.push({
             pos : p,
             neg : planesArr[i],
@@ -330,12 +349,12 @@ function mapPlanesToFaces(planesArr){
   return f2PlnMap;
 }
 
-function arePlanesParrallel(plane1, plane2){
+function areVec3sParallel(vec1, vec2){
   let threshold = 0.000001;
   let ratiosToCheck = [];
-  let aRatio = plane2.a != 0 ? Math.abs(plane1.a/plane2.a) : 0;
-  let bRatio = plane2.b != 0 ? Math.abs(plane1.b/plane2.b) : 0;
-  let cRatio = plane2.c != 0 ? Math.abs(plane1.c/plane2.c) : 0;
+  let aRatio = vec2.x != 0 ? Math.abs(vec1.x/vec2.x) : 0;
+  let bRatio = vec2.y != 0 ? Math.abs(vec1.y/vec2.y) : 0;
+  let cRatio = vec2.z != 0 ? Math.abs(vec1.z/vec2.z) : 0;
   if(aRatio != 0) { ratiosToCheck.push(aRatio); }
   if(bRatio != 0) { ratiosToCheck.push(bRatio); }
   if(cRatio != 0) { ratiosToCheck.push(cRatio); }
@@ -596,7 +615,7 @@ function calculateRandPerpVector(vector, range){
   return new THREE.Vector3(xRand, yRand, z);
 }
 
-function addPointAsSphere(pos, color = 'yellow', size = 0.1){
+function addPointAsSphere(pos, color = 'yellow', size = 0.07){
   const geometry = new THREE.SphereGeometry( size , 32, 32 );
   const material = new THREE.MeshBasicMaterial( {color: color} );
   const sphere = new THREE.Mesh( geometry, material);
