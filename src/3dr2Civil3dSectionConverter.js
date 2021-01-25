@@ -163,54 +163,6 @@ function getPointFromPlanes(plane1, plane2, plane3) {
     return result;
 }
 
-function convertToCivilStyleSection(normal, distance) {
-    // Calculate perpendicular vector for section
-    // using logic from an answere here: https://math.stackexchange.com/questions/137362/how-to-find-perpendicular-vector-to-another-vector
-    // NOTE: probably need to project the editor UP direction
-    // on to the plone to get the first orthogonal vector
-    const moduliOfOptions =
-    {
-        'C&B': normal.z * normal.z + normal.y * normal.y,
-        'C&A': normal.z * normal.z + normal.x * normal.x,
-        'B&A': normal.y * normal.y + normal.x * normal.x,
-    };
-
-    // Create items array
-    var orderedPairs = Object.keys(moduliOfOptions).map(function (key) {
-        return [key, moduliOfOptions[key]];
-    });
-    // Sort the array based on the second element
-    orderedPairs.sort(function (first, second) {
-        return second[1] - first[1];
-    });
-
-    let civilOrthVec1 = new THREE.Vector3();
-    switch (orderedPairs[0][0]) {
-        case 'C&B':
-            civilOrthVec1 = new THREE.Vector3(0, normal.z, -normal.y);
-            break;
-        case 'C&A':
-            civilOrthVec1 = new THREE.Vector3(-normal.z, 0, normal.x);
-            break;
-        case 'B&A':
-            civilOrthVec1 = new THREE.Vector3(-normal.y, normal.x, 0);
-            break;
-    }
-
-    // Calculate two points on the plane that form the cutting line
-    let civilOrthVec2 = new THREE.Vector3().crossVectors(civilOrthVec1, normal);
-    let p1 = new THREE.Vector3().add(normal.multiplyScalar(distance));
-    let p2 = new THREE.Vector3().add(p1).add(civilOrthVec2);
-
-    let result =
-    {
-        sectionUp: civilOrthVec1,
-        point1: p1,
-        point2: p2,
-    }
-    return result;
-}
-
 function convertToCivilStyleBoxSection(planePairs) {
     let topPnts = [];
     let btmPnts = [];
@@ -310,23 +262,6 @@ function getProjVecOnPlane(vec, plane) {
     const kpn = (new THREE.Vector3().copy(n)).multiplyScalar(k.dot(n) / (n.length() * n.length()));
     const kpp = new THREE.Vector3().add(k).sub(kpn);
     return kpp;
-}
-
-function isPntInBbox(pnt, bbox, addPoint = true) {
-    let xOk = (pnt.x < bbox.max.x) && (pnt.x > bbox.min.x);
-    let yOk = (pnt.y < bbox.max.y) && (pnt.y > bbox.min.y);
-    let zOk = (pnt.z < bbox.max.z) && (pnt.z > bbox.min.z);
-    let result = xOk && yOk && zOk;
-    if (addPoint) {
-        let inColor = 'red';
-        let outColor = 'green';
-        if (result) {
-            addPointAsSphere(pnt, inColor, 0.07);
-        } else {
-            addPointAsSphere(pnt, outColor, 0.07);
-        }
-    }
-    return result;
 }
 
 function getBoundingBoxFromModel() {
