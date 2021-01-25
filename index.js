@@ -142,14 +142,14 @@ function setupDatGUI(){
 }
 //#endregion
 
-function getSectionPlaneFrom3dRepo(){
+function getSectionPlaneFrom3dRepo(bbox){
     // getting the section plane data from 3drepo
     const apiKey = '670f65dd5a45cc01dc97d771ffad2b35';
     const modelId = '43dac390-5668-11eb-901c-8dcbf0759038';
     // Basic testing : all clip dir -1
     // const issueId = '8f802f30-567f-11eb-b14c-331a8baa9a5e'; // 1 plane - 5-4-1 - back end
     // const issueId = '229498c0-5c8d-11eb-82c1-3d258507f8b6'; // 1 plane - 3-2-1 - front end 
-    // const issueId = '602cb4b0-567f-11eb-b14c-331a8baa9a5e'; // 1 plane - in half
+    const issueId = '602cb4b0-567f-11eb-b14c-331a8baa9a5e'; // 1 plane - in half [FAIL]
     // const issueId = 'afe494c0-5669-11eb-b14c-331a8baa9a5e'; // 1 plane - 3-1-2
     // const issueId = 'e23cc080-5729-11eb-b14c-331a8baa9a5e'; // 1 plane - 3-5-1
     // const issueId = 'e49e9360-599c-11eb-bb0d-b34330a480ad'; // 6 box clip  - 3-5-1
@@ -166,7 +166,7 @@ function getSectionPlaneFrom3dRepo(){
     
     // clip dir testing
     // const issueId = '3180fd50-5c9d-11eb-82c1-3d258507f8b6'; // 1 plane - diagonal cut -ve clip dir (farthest point behind)
-    const issueId = 'fadfb0c0-5efe-11eb-999e-393f16405674'; // 1 plane - diag cut +ve clip dir 
+    // const issueId = 'fadfb0c0-5efe-11eb-999e-393f16405674'; // 1 plane - diag cut +ve clip dir 
     // const issueId = 'ba1702f0-5ef9-11eb-8ff0-cba8800d66f2'; // 2 plane - quarter - both planes flipped
     // const issueId = 'dfcdd760-5f00-11eb-999e-393f16405674'; // 3 plane - 3d quarter - all planes flipped (3-6-5)
     
@@ -187,7 +187,7 @@ function getSectionPlaneFrom3dRepo(){
     fetch(url)
       .then((response) => response.json())
       .then((data) => {
-        console.log(Convert(data.viewpoint.clippingPlanes));
+        console.log(Convert(data.viewpoint.clippingPlanes, bbox));
       });
       // .catch((error) => {
       //   console.log('Dammit');
@@ -209,9 +209,12 @@ function loadModel(){
       });
       object.children[0].material = modelMat;
       globals.scene.add( object );
+      // get bbox parameters
+      const bbox = getBoundingBoxFromModel();
+      // Visualise box
       const box = new THREE.BoxHelper(object, 0xffff00);
       globals.scene.add(box);
-      getSectionPlaneFrom3dRepo();
+      getSectionPlaneFrom3dRepo(bbox);
     },
     // called when loading is in progresses
     function ( xhr ) {
@@ -223,6 +226,34 @@ function loadModel(){
     }
   );
 }
+
+function getBoundingBoxFromModel() {
+  const bbox = new THREE.Box3();
+  let dice = globals.scene.getObjectByName('dice', true);
+  bbox.expandByObject(dice);
+  let diagonalVector = new THREE.Vector3(
+      bbox.max.x - bbox.min.x,
+      bbox.max.y - bbox.min.y,
+      bbox.max.z - bbox.min.z
+  ).multiplyScalar(0.5);
+  bbox.center = new THREE.Vector3(
+      bbox.min.x,
+      bbox.min.y,
+      bbox.min.z
+  ).add(diagonalVector);
+  bbox.vertices = [
+      new THREE.Vector3(bbox.min.x, bbox.min.y, bbox.min.z),
+      new THREE.Vector3(bbox.max.x, bbox.min.y, bbox.min.z),
+      new THREE.Vector3(bbox.min.x, bbox.max.y, bbox.min.z),
+      new THREE.Vector3(bbox.min.x, bbox.min.y, bbox.max.z),
+      new THREE.Vector3(bbox.max.x, bbox.max.y, bbox.max.z),
+      new THREE.Vector3(bbox.min.x, bbox.max.y, bbox.max.z),
+      new THREE.Vector3(bbox.max.x, bbox.min.y, bbox.max.z),
+      new THREE.Vector3(bbox.max.x, bbox.max.y, bbox.min.z),
+  ]
+  return bbox;
+}
+
 //#endregion
 
 initialise();

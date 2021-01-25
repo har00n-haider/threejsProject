@@ -3,8 +3,11 @@ import globals from '../lib/gameEngine/Globals.js';
 // GameEngine stuff
 import {rand, randVec3} from '../lib/gameEngine/utils/Utils.js';
 
-// public function
-function Convert(clippingPlanes) {
+//#region public functions
+
+// Converts an array of 3drepo clipping planes into 
+// a Civil 3D section.
+function Convert(clippingPlanes, bbox) {
     let planeArr = [];
     for (const repoPlane of clippingPlanes) {
         const plane = getPlaneFromVals(
@@ -17,15 +20,18 @@ function Convert(clippingPlanes) {
         );
         planeArr.push(plane);
     }
-
     const faces = mapPlanesToFaces(planeArr);
     adaptFlippedFaces(faces);
-    fillMissingFaces(faces);
-    // addFaces(faces)
-    return convertToCivilStyleBoxSection(faces);
+    fillMissingFaces(faces, bbox);
+    return getCivilSectionFromPlanes(faces);
 }
 
+//#endregion
+
 //#region private functions
+
+// Takes into account the clip direction, and removes the 
+// flipped faces of the clip box (will be reconstructed later)
 function adaptFlippedFaces(faces) {
     for (const face of faces) {
         let posFaceFlipped = face.pos != null && face.pos.clipDir > 0;
@@ -41,8 +47,10 @@ function adaptFlippedFaces(faces) {
     }
 }
 
-function fillMissingFaces(faces) {
-    const bbox = getBoundingBoxFromModel();
+// Reconstructs the missing planes around the bounding box of 
+// the model to form a cube. It does nothing to a complete 
+// set of planes representing a cube 
+function fillMissingFaces(faces, bbox) {
     const axisVecs = [
         new THREE.Vector3(1, 0, 0),
         new THREE.Vector3(0, 1, 0),
@@ -61,8 +69,8 @@ function fillMissingFaces(faces) {
             fullFaces.push(face);
         }
     }
+    // Fill in the rest
     if (fullFaces.length != 3) {
-        // Fill in the rest
         for (const face of faces) {
             if (face.pos == null && face.neg == null) {
                 if (fullFaces.length == 1) {
@@ -70,9 +78,12 @@ function fillMissingFaces(faces) {
                     let chosenAxisVec = axisVecs[0];
                     for (let i = 1; i < axisVecs.length; i++) {
                         if (areVec3sParallel(fullFaces[0].pos.normal, chosenAxisVec)) {
+                            chosenAxisVec = axisVecs[i];
+                            continue;
+                        }
+                        else{
                             break;
                         }
-                        chosenAxisVec = axisVecs[i];
                     }
                     face.neg = genAdjOrthPlane(fullFaces[0].pos, fullFaces[0].neg, bbox, chosenAxisVec);
                     face.pos = genOppParrPlane(face.neg, bbox);
@@ -90,6 +101,8 @@ function fillMissingFaces(faces) {
     }
 }
 
+// Takes an array of planes and maps them 
+// set of parallel faces on a cuboid
 function mapPlanesToFaces(planesArr) {
     const f2PlnMap = [];
     const seekAndDestroy = () => {
@@ -145,7 +158,7 @@ function areVec3sParallel(vec1, vec2) {
     return resultMag < threshold;
 }
 
-// Solving three linear equations
+// Solving three linear equations 
 function getPointFromPlanes(plane1, plane2, plane3) {
     const A = new THREE.Matrix3();
     A.set(
@@ -163,17 +176,18 @@ function getPointFromPlanes(plane1, plane2, plane3) {
     return result;
 }
 
-function convertToCivilStyleBoxSection(planePairs) {
+function getCivilSectionFromPlanes(planePairs) {
     let topPnts = [];
     let btmPnts = [];
 
-    topPnts.push(getPointFromPlanes(planePairs[0].pos, planePairs[1].pos, planePairs[2].pos));
+    // This order needs to be maintaned in to make sure section points are sequential 
+    // square coordinates
     topPnts.push(getPointFromPlanes(planePairs[0].pos, planePairs[1].neg, planePairs[2].pos));
+    topPnts.push(getPointFromPlanes(planePairs[0].pos, planePairs[1].pos, planePairs[2].pos));
     topPnts.push(getPointFromPlanes(planePairs[0].pos, planePairs[1].pos, planePairs[2].neg));
     topPnts.push(getPointFromPlanes(planePairs[0].pos, planePairs[1].neg, planePairs[2].neg));
-
-    btmPnts.push(getPointFromPlanes(planePairs[0].neg, planePairs[1].pos, planePairs[2].pos));
     btmPnts.push(getPointFromPlanes(planePairs[0].neg, planePairs[1].neg, planePairs[2].pos));
+    btmPnts.push(getPointFromPlanes(planePairs[0].neg, planePairs[1].pos, planePairs[2].pos));
     btmPnts.push(getPointFromPlanes(planePairs[0].neg, planePairs[1].pos, planePairs[2].neg));
     btmPnts.push(getPointFromPlanes(planePairs[0].neg, planePairs[1].neg, planePairs[2].neg));
 
@@ -184,46 +198,56 @@ function convertToCivilStyleBoxSection(planePairs) {
         upDirection : null, 
     } 
 
+    // Loop throught the points in array, 
     for (let pntCtr = 0; pntCtr < topPnts.length; pntCtr++) {
-        let p1 = new THREE.Vector3(topPnts[pntCtr].x, topPnts[pntCtr].y, topPnts[pntCtr].z);
-        let p2 = new THREE.Vector3(btmPnts[pntCtr].x, btmPnts[pntCtr].y, btmPnts[pntCtr].z);
-        let arwVecOrg = new THREE.Vector3(btmPnts[pntCtr].x, btmPnts[pntCtr].y, btmPnts[pntCtr].z);
-        let arwVec = p1.add(p2.multiplyScalar(-1));
-        let halfArwVec = new THREE.Vector3(arwVec.x, arwVec.y, arwVec.z);
-        halfArwVec.multiplyScalar(0.5);
+        let topPnt = new THREE.Vector3().copy(topPnts[pntCtr]);
+        let botPnt = new THREE.Vector3().copy(btmPnts[pntCtr]);
+        let arwVecOrg = new THREE.Vector3().copy(btmPnts[pntCtr]);
+        let arwVec = topPnt.add(botPnt.multiplyScalar(-1));
+        let halfArwVec = new THREE.Vector3().copy(arwVec).multiplyScalar(0.5);
         let midPoint = arwVecOrg.add(halfArwVec);
         // Update result 
         result.sectionPnts.push(midPoint);
         result.upDirection = result.upDirection == null ? new THREE.Vector3().copy(arwVec).normalize() : result.upDirection;
         result.heightAbove = halfArwVec.length(); 
         result.heightBelow = halfArwVec.length(); 
-        // Debug
-        addArrowHelper(arwVec, btmPnts[pntCtr], arwVec.length());
-        addPointAsSphere(topPnts[pntCtr]);
-        addPointAsSphere(btmPnts[pntCtr]);
-        addPointAsSphere(midPoint, 'blue');
     }
 
+    // Debug 
+    if(true){
+        let arw01 = new THREE.Vector3().subVectors(result.sectionPnts[1],result.sectionPnts[0]);
+        let arw12 = new THREE.Vector3().subVectors(result.sectionPnts[2],result.sectionPnts[1]);
+        let arw23 = new THREE.Vector3().subVectors(result.sectionPnts[3],result.sectionPnts[2]);
+        addArrowHelper(arw01, result.sectionPnts[0], arw01.length(), 'black');
+        addArrowHelper(arw12, result.sectionPnts[1], arw12.length(), 'black');
+        addArrowHelper(arw23, result.sectionPnts[2], arw23.length(), 'black');
+        for (const pnt of result.sectionPnts) {
+            addPointAsSphere(pnt);
+            addArrowHelper(result.upDirection, pnt, result.heightAbove, 'green');
+        }
+    }
+
+    // TODO: This would be a civil 3d section
     return result;
 }
 
 function genOppParrPlane(plane, bbox) {
     const farPnt = getFarthestPntFromPlane(bbox.vertices, plane);
-    const oppParPlane = getPlaneFromPntNorm(farPnt, plane.normal);
+    const oppParPlane = getPlaneFromPntAndNorm(farPnt, plane.normal);
     return oppParPlane;
 }
 
-function genAdjOrthPlane(plane, oppParPlane, bbox, upDir = new THREE.Vector3(0, 1, 0)) {
+function genAdjOrthPlane(plane, oppParPlane, bbox, upDir) {
     // Figure out the point and normal of the adjacent orth plane
     // Using the upDir as y axis by default to keep things looking somewhat axis aligned
     const upDirProjVec = getProjVecOnPlane(upDir, plane);
     const orthDir = new THREE.Vector3().crossVectors(plane.normal, upDirProjVec);
     const vecToCenter = new THREE.Vector3().copy(oppParPlane.center).sub(plane.center);
     const centerPoint = new THREE.Vector3().copy(plane.center).add(vecToCenter.multiplyScalar(0.5));
-    const orthPlaneMid = getPlaneFromPntNorm(centerPoint, orthDir);
+    const orthPlaneMid = getPlaneFromPntAndNorm(centerPoint, orthDir);
 
     const farPnt = getFarthestPntFromPlane(bbox.vertices, orthPlaneMid);
-    const orthPlane = getPlaneFromPntNorm(farPnt, orthDir);
+    const orthPlane = getPlaneFromPntAndNorm(farPnt, orthDir);
     return orthPlane;
 }
 
@@ -231,7 +255,10 @@ function getFarthestPntFromPlane(points, plane) {
     let distPairs = points.map((vert) => {
         return { point: vert, dist: getDistOfPntFromPlane(vert, plane) };
     });
-    // Taking into account the clip direction to choose the farthest point
+    // Taking into account the clip direction to choose the farthest point.
+    // These will be relative to the plane normal. Only 3drepo planes normal
+    // directions need to be processed (generated planes aren't concerned 
+    // with clipping)
     if (plane.source == '3drepo') {
         distPairs = distPairs.filter(pair => {
             if (plane.clipDir < 0) {
@@ -264,38 +291,11 @@ function getProjVecOnPlane(vec, plane) {
     return kpp;
 }
 
-function getBoundingBoxFromModel() {
-    const bbox = new THREE.Box3();
-    let dice = globals.scene.getObjectByName('dice', true);
-    bbox.expandByObject(dice);
-    let diagonalVector = new THREE.Vector3(
-        bbox.max.x - bbox.min.x,
-        bbox.max.y - bbox.min.y,
-        bbox.max.z - bbox.min.z
-    ).multiplyScalar(0.5);
-    bbox.center = new THREE.Vector3(
-        bbox.min.x,
-        bbox.min.y,
-        bbox.min.z
-    ).add(diagonalVector);
-    bbox.vertices = [
-        new THREE.Vector3(bbox.min.x, bbox.min.y, bbox.min.z),
-        new THREE.Vector3(bbox.max.x, bbox.min.y, bbox.min.z),
-        new THREE.Vector3(bbox.min.x, bbox.max.y, bbox.min.z),
-        new THREE.Vector3(bbox.min.x, bbox.min.y, bbox.max.z),
-        new THREE.Vector3(bbox.max.x, bbox.max.y, bbox.max.z),
-        new THREE.Vector3(bbox.min.x, bbox.max.y, bbox.max.z),
-        new THREE.Vector3(bbox.max.x, bbox.min.y, bbox.max.z),
-        new THREE.Vector3(bbox.max.x, bbox.max.y, bbox.min.z),
-    ]
-    return bbox;
-}
-
 function getDistOfPntFromPlane(pnt, plane) {
     return plane.a * pnt.x + plane.b * pnt.y + plane.c * pnt.z + plane.d;
 }
 
-function getPlaneFromPntNorm(point, normal) {
+function getPlaneFromPntAndNorm(point, normal) {
     const planeNorm = new THREE.Vector3().copy(normal).normalize();
     const plane = getPlaneFromVals(
         planeNorm.x,
@@ -310,6 +310,7 @@ function getPlaneFromPntNorm(point, normal) {
     return plane
 }
 
+// Values are map to plane equation as:
 // ax + by + cz + d = 0
 function getPlaneFromVals(a, b, c, d, clipDir = -1, source = 'generated') {
     const planeNormal = new THREE.Vector3(a, b, c);
@@ -326,6 +327,7 @@ function getPlaneFromVals(a, b, c, d, clipDir = -1, source = 'generated') {
     plane.clipDir = clipDir;
     return plane;
 }
+
 //#endregion
 
 //#region Debug helpers
