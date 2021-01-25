@@ -150,6 +150,8 @@ function getSectionPlaneFrom3dRepo(){
     // const issueId = '602cb4b0-567f-11eb-b14c-331a8baa9a5e'; // 1 plane - in half
     // const issueId = 'afe494c0-5669-11eb-b14c-331a8baa9a5e'; // 1 plane - 3-1-2
     // const issueId = 'e23cc080-5729-11eb-b14c-331a8baa9a5e'; // 1 plane - 3-5-1
+    // const issueId = 'e49e9360-599c-11eb-bb0d-b34330a480ad'; // 6 box clip  - 3-5-1
+    
     // const issueId = 'e49e9360-599c-11eb-bb0d-b34330a480ad'; // 6 plane - 5-3-1
     // const issueId = '35992d00-59d1-11eb-9e73-c3cab698f37e'; // 6 plane - axis aligned
     // const issueId = 'a8794560-59d8-11eb-9e73-c3cab698f37e'; // 6 plane - straight down the middle
@@ -162,21 +164,14 @@ function getSectionPlaneFrom3dRepo(){
     
     // clip dir testing
     // const issueId = '3180fd50-5c9d-11eb-82c1-3d258507f8b6'; // 1 plane - diagonal cut -ve clip dir (farthest point behind)
-    // const issueId = 'fadfb0c0-5efe-11eb-999e-393f16405674'; // 1 plane - diag cut +ve clip dir 
+    const issueId = 'fadfb0c0-5efe-11eb-999e-393f16405674'; // 1 plane - diag cut +ve clip dir 
     // const issueId = 'ba1702f0-5ef9-11eb-8ff0-cba8800d66f2'; // 2 plane - quarter - both planes flipped
     // const issueId = 'dfcdd760-5f00-11eb-999e-393f16405674'; // 3 plane - 3d quarter - all planes flipped (3-6-5)
     
-
-    // [FAIL]
     // const issueId = 'e3bd6670-5ca2-11eb-999e-393f16405674'; // 4 plane - 2-4-6  corner box clip, all -ve clip directions
-    const issueId = '9ebeef70-5ca3-11eb-82c1-3d258507f8b6'; // 6 plane - 3-1-2 quarter clip some +ve clipDir
+    // const issueId = '9ebeef70-5ca3-11eb-82c1-3d258507f8b6'; // 6 plane - 3-1-2 quarter clip some +ve clipDir
     // const issueId = '3f7ed540-5ef4-11eb-999e-393f16405674'; // 6 plane - 3-6-5 original corner 
     // const issueId = '3ac17ed0-5ef5-11eb-999e-393f16405674'; // 6 plane - 3-6-5 flipped in the x dir
-    // const issueId = ''; 
-    // const issueId = ''; 
-    
-
-
 
     const teamSpace = 'HH';
     const urlBase = 'https://api1.staging.dev.3drepo.io/api'
@@ -190,7 +185,7 @@ function getSectionPlaneFrom3dRepo(){
     fetch(url)
       .then((response) => response.json())
       .then((data) => {
-        display3drepoMesh(data.viewpoint.clippingPlanes);
+        conv3drClipPlns2Civil3dSection(data.viewpoint.clippingPlanes);
       });
       // .catch((error) => {
       //   console.log('Dammit');
@@ -198,7 +193,38 @@ function getSectionPlaneFrom3dRepo(){
       // });
 }
 
-function display3drepoMesh(clippingPlanes) {
+function loadModel(){
+  const loader = new OBJLoader();
+  loader.load(
+    'assets/dado.obj',
+    // called when resource is loaded
+    function ( object ) {
+      object.name = 'dice';
+      const modelMat = new THREE.MeshPhongMaterial({
+        color: 'grey',
+        opacity: 0.6,
+        transparent: true,
+      });
+      object.children[0].material = modelMat;
+      globals.scene.add( object );
+      addBbox(object);
+      getSectionPlaneFrom3dRepo();
+    },
+    // called when loading is in progresses
+    function ( xhr ) {
+      console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+    },
+    // called when loading has errors
+    function ( error ) {
+      console.log( 'loading error: ' + error );
+    }
+  );
+}
+//#endregion
+
+//#region Plane conversion functions
+
+function conv3drClipPlns2Civil3dSection(clippingPlanes) {
   let planeArr = [];
   for (const repoPlane of clippingPlanes) {
     const plane = getPlaneFromVals(
@@ -242,37 +268,6 @@ function display3drepoMesh(clippingPlanes) {
   }
 
 }
-
-function loadModel(){
-  const loader = new OBJLoader();
-  loader.load(
-    'assets/dado.obj',
-    // called when resource is loaded
-    function ( object ) {
-      object.name = 'dice';
-      const modelMat = new THREE.MeshPhongMaterial({
-        color: 'grey',
-        opacity: 0.2,
-        transparent: true,
-      });
-      object.children[0].material = modelMat;
-      globals.scene.add( object );
-      addBbox(object);
-      getSectionPlaneFrom3dRepo();
-    },
-    // called when loading is in progresses
-    function ( xhr ) {
-      console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
-    },
-    // called when loading has errors
-    function ( error ) {
-      console.log( 'loading error: ' + error );
-    }
-  );
-}
-//#endregion
-
-//#region Plane conversion functions
 
 function adaptFlippedFaces(faces){
   for(const face of faces){
