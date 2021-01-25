@@ -356,25 +356,10 @@ function mapPlanesToFaces(planesArr){
 }
 
 function areVec3sParallel(vec1, vec2){
+  let result = new THREE.Vector3().crossVectors(vec1, vec2);
+  let resultMag = result.length();
   let threshold = 0.000001;
-  let ratiosToCheck = [];
-  let aRatio = vec2.x != 0 ? Math.abs(vec1.x/vec2.x) : 0;
-  let bRatio = vec2.y != 0 ? Math.abs(vec1.y/vec2.y) : 0;
-  let cRatio = vec2.z != 0 ? Math.abs(vec1.z/vec2.z) : 0;
-  if(aRatio != 0) { ratiosToCheck.push(aRatio); }
-  if(bRatio != 0) { ratiosToCheck.push(bRatio); }
-  if(cRatio != 0) { ratiosToCheck.push(cRatio); }
-  let firstRatio = ratiosToCheck[0];
-  for (let i = 0; i < ratiosToCheck.length; i++) {
-    ratiosToCheck[i] -= firstRatio;
-  }
-  if(ratiosToCheck.filter(val => Math.abs(val) < threshold).length == ratiosToCheck.length)
-  {
-    return true;
-  }
-  else {
-    return false;
-  }
+  return resultMag < threshold;
 }
 
 // Solving three linear equations
