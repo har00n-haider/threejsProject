@@ -287,7 +287,7 @@ function fillMissingFaces(faces){
     if(face.pos != null && face.neg == null){
       face.neg = genOppParrPlane(face.pos, bbox);
     }
-    else if(face.pos != null && face.neg == null){
+    else if(face.pos == null && face.neg != null){
       face.pos = genOppParrPlane(face.neg, bbox);
     }
     if(face.pos != null && face.neg != null){
