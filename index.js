@@ -198,6 +198,7 @@ function display3drepoMesh(clippingPlanes) {
   }
   
   const faces = mapPlanesToFaces(planeArr);
+  adaptFlippedFaces(faces);
   fillMissingFaces(faces);
   addFaces(faces)
   convertToCivilStyleBoxSection(faces);
@@ -257,6 +258,21 @@ function loadModel(){
 //#endregion
 
 //#region Plane conversion functions
+
+function adaptFlippedFaces(faces){
+  for(const face of faces){
+    let posFaceFlipped = face.pos != null && face.pos.clipDir > 0;
+    let negFaceFlipped = face.neg != null && face.neg.clipDir > 0;
+    if(posFaceFlipped && negFaceFlipped){
+      // bail if two sides of the same face are flipped
+      console.log("error: clip dir on two planes on the same axis are flipped");
+    }
+    else{
+      face.pos = negFaceFlipped ? null : face.pos;
+      face.neg = posFaceFlipped ? null : face.neg;
+    }
+  }
+}
 
 function fillMissingFaces(faces){
   const bbox = getBoundingBoxFromModel();
