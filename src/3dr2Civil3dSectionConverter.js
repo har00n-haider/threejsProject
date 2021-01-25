@@ -151,31 +151,6 @@ function mapPlanesToFaces(planesArr) {
     return f2PlnMap;
 }
 
-function areVec3sParallel(vec1, vec2) {
-    let result = new THREE.Vector3().crossVectors(vec1, vec2);
-    let resultMag = result.length();
-    let threshold = 0.000001;
-    return resultMag < threshold;
-}
-
-// Solving three linear equations 
-function getPointFromPlanes(plane1, plane2, plane3) {
-    const A = new THREE.Matrix3();
-    A.set(
-        plane1.a, plane1.b, plane1.c,
-        plane2.a, plane2.b, plane2.c,
-        plane3.a, plane3.b, plane3.c
-    )
-    A.invert();
-    const B = new THREE.Vector3(
-        -plane1.d,
-        -plane2.d,
-        -plane3.d
-    )
-    let result = B.applyMatrix3(A);
-    return result;
-}
-
 function getCivilSectionFromPlanes(planePairs) {
     let topPnts = [];
     let btmPnts = [];
@@ -251,6 +226,26 @@ function genAdjOrthPlane(plane, oppParPlane, bbox, upDir) {
     return orthPlane;
 }
 
+//#region geometric utility functions9
+
+// Solving AX = B
+function getPointFromPlanes(plane1, plane2, plane3) {
+    const A = new THREE.Matrix3();
+    A.set(
+        plane1.a, plane1.b, plane1.c,
+        plane2.a, plane2.b, plane2.c,
+        plane3.a, plane3.b, plane3.c
+    )
+    A.invert();
+    const B = new THREE.Vector3(
+        -plane1.d,
+        -plane2.d,
+        -plane3.d
+    )
+    let result = B.applyMatrix3(A);
+    return result;
+}
+
 function getFarthestPntFromPlane(points, plane) {
     let distPairs = points.map((vert) => {
         return { point: vert, dist: getDistOfPntFromPlane(vert, plane) };
@@ -310,6 +305,13 @@ function getPlaneFromPntAndNorm(point, normal) {
     return plane
 }
 
+function areVec3sParallel(vec1, vec2) {
+    let result = new THREE.Vector3().crossVectors(vec1, vec2);
+    let resultMag = result.length();
+    let threshold = 0.000001;
+    return resultMag < threshold;
+}
+
 // Values are map to plane equation as:
 // ax + by + cz + d = 0
 function getPlaneFromVals(a, b, c, d, clipDir = -1, source = 'generated') {
@@ -327,6 +329,7 @@ function getPlaneFromVals(a, b, c, d, clipDir = -1, source = 'generated') {
     plane.clipDir = clipDir;
     return plane;
 }
+//#endregion
 
 //#endregion
 
