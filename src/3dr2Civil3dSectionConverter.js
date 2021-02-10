@@ -157,10 +157,10 @@ function getCivilSectionFromPlanes(planePairs) {
 
     // This order needs to be maintaned in to make sure section points are sequential 
     // square coordinates
-    topPnts.push(getPointFromPlanes(planePairs[0].pos, planePairs[1].neg, planePairs[2].pos));
-    topPnts.push(getPointFromPlanes(planePairs[0].pos, planePairs[1].pos, planePairs[2].pos));
-    topPnts.push(getPointFromPlanes(planePairs[0].pos, planePairs[1].pos, planePairs[2].neg));
     topPnts.push(getPointFromPlanes(planePairs[0].pos, planePairs[1].neg, planePairs[2].neg));
+    topPnts.push(getPointFromPlanes(planePairs[0].pos, planePairs[1].pos, planePairs[2].neg));
+    topPnts.push(getPointFromPlanes(planePairs[0].pos, planePairs[1].pos, planePairs[2].pos));
+    topPnts.push(getPointFromPlanes(planePairs[0].pos, planePairs[1].neg, planePairs[2].pos));
     btmPnts.push(getPointFromPlanes(planePairs[0].neg, planePairs[1].neg, planePairs[2].pos));
     btmPnts.push(getPointFromPlanes(planePairs[0].neg, planePairs[1].pos, planePairs[2].pos));
     btmPnts.push(getPointFromPlanes(planePairs[0].neg, planePairs[1].pos, planePairs[2].neg));
@@ -188,18 +188,26 @@ function getCivilSectionFromPlanes(planePairs) {
         result.heightBelow = halfArwVec.length(); 
     }
 
-    // Debug 
-    if(true){
-        let arw01 = new THREE.Vector3().subVectors(result.sectionPnts[1],result.sectionPnts[0]);
-        let arw12 = new THREE.Vector3().subVectors(result.sectionPnts[2],result.sectionPnts[1]);
-        let arw23 = new THREE.Vector3().subVectors(result.sectionPnts[3],result.sectionPnts[2]);
-        addArrowHelper(arw01, result.sectionPnts[0], arw01.length(), 'black');
-        addArrowHelper(arw12, result.sectionPnts[1], arw12.length(), 'black');
-        addArrowHelper(arw23, result.sectionPnts[2], arw23.length(), 'black');
-        for (const pnt of result.sectionPnts) {
+    const plotVecsFromPnts = (pnts) =>{
+        let arw01 = new THREE.Vector3().subVectors(pnts[1],pnts[0]);
+        let arw12 = new THREE.Vector3().subVectors(pnts[2],pnts[1]);
+        let arw23 = new THREE.Vector3().subVectors(pnts[3],pnts[2]);
+        addArrowHelper(arw01, pnts[0], arw01.length(), 'black');
+        addArrowHelper(arw12, pnts[1], arw12.length(), 'black');
+        addArrowHelper(arw23, pnts[2], arw23.length(), 'black');
+        for (const pnt of pnts) {
             addPointAsSphere(pnt);
-            addArrowHelper(result.upDirection, pnt, result.heightAbove, 'green');
         }
+    }
+
+
+    // Debug 
+    if(false){
+        plotVecsFromPnts(result.sectionPnts);
+    }
+    if(true){
+        plotVecsFromPnts(topPnts);
+        plotVecsFromPnts(btmPnts);
     }
 
     // TODO: This would be a civil 3d section

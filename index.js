@@ -149,7 +149,7 @@ function getSectionPlaneFrom3dRepo(bbox){
     // Basic testing : all clip dir -1
     // const issueId = '8f802f30-567f-11eb-b14c-331a8baa9a5e'; // 1 plane - 5-4-1 - back end
     // const issueId = '229498c0-5c8d-11eb-82c1-3d258507f8b6'; // 1 plane - 3-2-1 - front end 
-    const issueId = '602cb4b0-567f-11eb-b14c-331a8baa9a5e'; // 1 plane - in half [FAIL]
+    // const issueId = '602cb4b0-567f-11eb-b14c-331a8baa9a5e'; // 1 plane - in half [FAIL]
     // const issueId = 'afe494c0-5669-11eb-b14c-331a8baa9a5e'; // 1 plane - 3-1-2
     // const issueId = 'e23cc080-5729-11eb-b14c-331a8baa9a5e'; // 1 plane - 3-5-1
     // const issueId = 'e49e9360-599c-11eb-bb0d-b34330a480ad'; // 6 box clip  - 3-5-1
@@ -160,7 +160,7 @@ function getSectionPlaneFrom3dRepo(bbox){
     // const issueId = '2d6812f0-59da-11eb-bb0d-b34330a480ad'; // 4 plane - clip box
     // const issueId = 'd1b73ae0-5b36-11eb-8190-0f3cc630421e'; // 1 plane - section starts outside box
     // const issueId = '89ace260-5c06-11eb-95bf-77794e8460c9'; // 4 plane - two not parallel
-    // const issueId = 'a4a8da10-5c15-11eb-82c1-3d258507f8b6'; // 2 plane - diag half section - two planes not parallel
+    const issueId = 'a4a8da10-5c15-11eb-82c1-3d258507f8b6'; // 2 plane - diag half section - two planes not parallel
     // const issueId = 'e10f9ed0-5c92-11eb-82c1-3d258507f8b6'; // 3 plane - bottom only 
     // const issueId = '6a9fb9e0-5c94-11eb-82c1-3d258507f8b6'; // 5 plane - 3-2 near side
     
