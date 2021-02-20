@@ -6,11 +6,16 @@ import Debugger from './lib/gameEngine/utils/Debugger.js';
 import InputManager from './lib/gameEngine/utils/InputManager.js';
 import globals from './lib/gameEngine/Globals.js';
 import InfiniteGridHelper from './lib/InfiniteGridHelper.js';
-// GameObjects
+import {GUI} from './lib/dat.gui.module.js';
+// GameEngine stuff
 import GameObjectManager from './lib/gameEngine/ecs/GameObjectManager.js';
 import AudioManager from './lib/gameEngine/utils/AudioManager.js';
+import * as Utils from './lib/gameEngine/utils/Utils.js';
+// Project specific stuff
 
-// Initial seup of scene, camera and lights
+//#region Game engine stuff
+
+// Initial setup of scene, camera and lights
 function initialise() {
   // canvas setup
   const canvas = document.querySelector('canvas');
@@ -34,7 +39,7 @@ function initialise() {
   const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
   globals.canvas = canvas;
   globals.mainCamera = camera;
-  camera.position.set(0, 5, 50);
+  camera.position.set(0, 5, 10);
   camera.lookAt(new THREE.Vector3(0, 0, 0));
 
   // scene
@@ -45,7 +50,7 @@ function initialise() {
   // lights
   function addLight(...pos) {
     const color = 0xffffff;
-    const intensity = 1;
+    const intensity = 0.5;
     const light = new THREE.DirectionalLight(color, intensity);
     light.position.set(...pos);
     light.target.position.set(0, 0, 0);
@@ -126,7 +131,15 @@ function setupGameObjects() {
   globals.gameObjectManager = new GameObjectManager();
   globals.inputManager = new InputManager(globals.renderer.domElement);
   globals.debugger = new Debugger(globals, document.getElementById('debugWrapper'));
+
 }
+
+function setupDatGUI(){
+  const gui = new GUI();
+  gui.add(globals, 'shit', 0, 0.5).name('something');
+}
+
+//#endregion 
 
 initialise();
 setupGameObjects();
