@@ -12,6 +12,7 @@ import GameObjectManager from './lib/gameEngine/ecs/GameObjectManager.js';
 import AudioManager from './lib/gameEngine/utils/AudioManager.js';
 import * as Utils from './lib/gameEngine/utils/Utils.js';
 // Project specific stuff
+import * as Kanji from './src/Kanji.js';
 
 //#region Game engine stuff
 
@@ -132,6 +133,7 @@ function setupGameObjects() {
   globals.inputManager = new InputManager(globals.renderer.domElement);
   globals.debugger = new Debugger(globals, document.getElementById('debugWrapper'));
 
+  Kanji.draw();
 }
 
 function setupDatGUI(){
