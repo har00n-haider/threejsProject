@@ -7,7 +7,9 @@ import InputManager from './lib/gameEngine/utils/InputManager.js';
 import globals from './lib/gameEngine/Globals.js';
 import InfiniteGridHelper from './lib/InfiniteGridHelper.js';
 import {OBJLoader} from './lib/OBJLoader.js';
+import {MTLLoader} from './lib/MTLLoader.js';
 import {GUI} from './lib/dat.gui.module.js';
+import {VertexNormalsHelper} from './lib/VertexNormalsHelper.js'
 // GameEngine stuff
 import GameObjectManager from './lib/gameEngine/ecs/GameObjectManager.js';
 import AudioManager from './lib/gameEngine/utils/AudioManager.js';
@@ -196,35 +198,44 @@ function getSectionPlaneFrom3dRepo(bbox){
 }
 
 function loadModel(){
-  const loader = new OBJLoader();
-  loader.load(
-    'assets/dado.obj',
-    // called when resource is loaded
-    function ( object ) {
-      object.name = 'dice';
-      const modelMat = new THREE.MeshPhongMaterial({
-        color: 'grey',
-        opacity: 0.6,
-        transparent: true,
-      });
-      object.children[0].material = modelMat;
-      globals.scene.add( object );
-      // get bbox parameters
-      const bbox = getBoundingBoxFromModel();
-      // Visualise box
-      const box = new THREE.BoxHelper(object, 0xffff00);
-      globals.scene.add(box);
-      getSectionPlaneFrom3dRepo(bbox);
-    },
-    // called when loading is in progresses
-    function ( xhr ) {
-      console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
-    },
-    // called when loading has errors
-    function ( error ) {
-      console.log( 'loading error: ' + error );
+  const objFilePath ='./assets/shapes.obj';
+  const mtlFilePath ='./assets/matShapes.mtl';
+  const onLoad = function ( object ) {
+    // object.name = 'dice';
+    // const modelMat = new THREE.MeshPhongMaterial({
+    //   color: 'grey',
+    //   opacity: 0.6,
+    //   transparent: true,
+    // });
+    // object.children[0].material = modelMat;
+    globals.scene.add( object );
+    // get bbox parameters
+    // const bbox = getBoundingBoxFromModel();
+    // // Visualise box
+    // const box = new THREE.BoxHelper(object, 0xffff00);
+    // globals.scene.add(box);
+    // getSectionPlaneFrom3dRepo(bbox);
+    for( const mesh of object.children){
+      // mesh.geometry.computeVertexNormals() 
+      const helper = new VertexNormalsHelper( mesh, 0.1, 0xff0000 );
+      globals.scene.add( helper );
     }
-  );
+  };
+  const onProgress = function ( xhr ) {
+    console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+  };
+  const onError = function ( error ) {
+    console.log( 'loading error: ' + error );
+  };
+  var mtlLoader = new MTLLoader();
+  // mtlLoader.setPath('obj/male02/');
+  mtlLoader.load(mtlFilePath, function(materials) {
+    materials.preload();
+    var objLoader = new OBJLoader();
+    objLoader.setMaterials(materials);
+    // objLoader.setPath('obj/male02/');
+    objLoader.load(objFilePath, onLoad, onProgress, onError);
+  });
 }
 
 function getBoundingBoxFromModel() {
