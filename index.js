@@ -141,7 +141,6 @@ function setupDatGUI(){
 
 //#endregion 
 
-
 initialise();
 setupGameObjects();
 requestAnimationFrame(render);
