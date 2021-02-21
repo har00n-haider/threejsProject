@@ -1,5 +1,6 @@
 import globals from '../lib/gameEngine/Globals.js';
 import * as THREE from '../lib/three.module.js';
+import * as Utils from '../lib/gameEngine/utils/Utils.js'
 
 function readStringFromFileAtPath(pathOfFileToReadFrom)
 {
@@ -13,7 +14,15 @@ function readStringFromFileAtPath(pathOfFileToReadFrom)
 const svgInfo = {}
 
 function loadSvg(){
-    var svgStr = readStringFromFileAtPath('assets/0f9af_edited.svg');
+    // var svgStr = readStringFromFileAtPath('assets/0f9af.svg');
+    // var svgStr = readStringFromFileAtPath('assets/0f9af_edited.svg');
+    var svgStr = readStringFromFileAtPath('assets/04ff5.svg');
+    // var svgStr = readStringFromFileAtPath('assets/05a3c.svg');
+    // var svgStr = readStringFromFileAtPath('assets/05a49.svg');
+    // var svgStr = readStringFromFileAtPath('assets/05a9a.svg');
+    // var svgStr = readStringFromFileAtPath('assets/05b80.svg');
+
+
     let parser = new DOMParser();
     let xmlDoc = parser.parseFromString(svgStr, "image/svg+xml");
     svgInfo.width  = parseInt(xmlDoc.getElementsByTagName("svg")[0].getAttribute('width'));
@@ -22,6 +31,7 @@ function loadSvg(){
     let pathGeoms = [];
     let pathStrings = [];
     for(const pathElem of gPathElems){
+        console.log('processing '  + pathElem.id);
         let pathStr = pathElem.getAttribute("d");
         pathStrings.push(pathStr);
         pathGeoms.push(getGeometryFromPathStr(pathStr));
@@ -146,9 +156,9 @@ function getPntOnCubicBezier(t, cB){
 }
 
 function addLineFromPnts(pnts){
-    const material = new THREE.LineBasicMaterial( { color: 0x0000ff ,	linewidth: 10 } );
+    const material = new THREE.LineBasicMaterial( { color: Utils.getRandomColor() } );
     const pnts3d = [];
-    for(const p of pnts){
+    for(const p of pnts){   
         pnts3d.push(new THREE.Vector3(p.x, p.y, 0));
     }
     const geometry = new THREE.BufferGeometry().setFromPoints( pnts3d );

@@ -117,10 +117,10 @@ function setupGameObjects() {
   globals.scene.add(grid);
 
   // controls
-  // globals.orbitControls = new OrbitControls(
-  //   globals.mainCamera,
-  //   globals.renderer.domElement,
-  // );
+  globals.orbitControls = new OrbitControls(
+    globals.mainCamera,
+    globals.renderer.domElement,
+  );
 
   // debug axes
   const axes = new THREE.AxesHelper(5);
