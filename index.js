@@ -40,8 +40,8 @@ function initialise() {
   const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
   globals.canvas = canvas;
   globals.mainCamera = camera;
-  camera.position.set(2, 2, 7);
-  camera.lookAt(new THREE.Vector3(2, 2, 0));
+  camera.position.set(2, 3, 5);
+  camera.lookAt(new THREE.Vector3(2, 3, 0));
 
   // scene
   const scene = new THREE.Scene();
@@ -117,10 +117,10 @@ function setupGameObjects() {
   globals.scene.add(grid);
 
   // controls
-  globals.orbitControls = new OrbitControls(
-    globals.mainCamera,
-    globals.renderer.domElement,
-  );
+  // globals.orbitControls = new OrbitControls(
+  //   globals.mainCamera,
+  //   globals.renderer.domElement,
+  // );
 
   // debug axes
   const axes = new THREE.AxesHelper(5);
@@ -130,6 +130,8 @@ function setupGameObjects() {
   globals.gameObjectManager = new GameObjectManager();
   globals.inputManager = new InputManager(globals.renderer.domElement);
   globals.debugger = new Debugger(globals, document.getElementById('debugWrapper'));
+
+  Kanji.init();
 
   Kanji.draw();
 }

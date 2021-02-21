@@ -4,8 +4,19 @@ import * as Utils from '../lib/gameEngine/utils/Utils.js'
 import * as m from '../lib/THREE.MeshLine.js';
 import { MeshLine, MeshLineMaterial } from '../lib/THREE.MeshLine.js';
 
-function readStringFromFileAtPath(pathOfFileToReadFrom)
-{
+let line = {};
+
+function init(){
+
+    makeLine()
+    globals.inputManager.moveEvent.regCb((pointerPos)=>{
+
+        // draw shit
+
+    });
+}
+
+function readStringFromFileAtPath(pathOfFileToReadFrom){
     var request = new XMLHttpRequest();
     request.open("GET", pathOfFileToReadFrom, false);
     request.send(null);
@@ -33,7 +44,6 @@ function loadSvg(){
     let pathGeoms = [];
     let pathStrings = [];
     for(const pathElem of gPathElems){
-        console.log('processing '  + pathElem.id);
         let pathStr = pathElem.getAttribute("d");
         pathStrings.push(pathStr);
         pathGeoms.push(getGeometryFromPathStr(pathStr));
@@ -157,42 +167,42 @@ function getPntOnCubicBezier(t, cB){
     return r;
 }
 
-function addLineFromPnts(pnts){
-    // const material = new THREE.LineBasicMaterial( { color: Utils.getRandomColor() } );
-    // const pnts3d = [];
-    // for(const p of pnts){   
-    //     pnts3d.push(new THREE.Vector3(p.x, p.y, 0));
-    // }
-    // const geometry = new THREE.BufferGeometry().setFromPoints( pnts3d );
-    // const line = new THREE.Line( geometry, material );
-    // globals.scene.add( line );
 
-    function makeLine( geo ) {
-        var g = new MeshLine();
-        g.setGeometry( geo );
-        var material = new MeshLineMaterial( {
-            useMap: false,
-            color: 'blue',
-            opacity: 1,
-            // Should be window width/height:
-            resolution: new THREE.Vector2( 1000, 800 ),
-            sizeAttenuation: false,
-            lineWidth: 10,
-        });
-        var mesh = new THREE.Mesh( g.geometry, material );
-        globals.scene.add( mesh );
-    }
-
-	var line = new THREE.Geometry();
-
-    for(const p of pnts){   
-        line.vertices.push( new THREE.Vector3(p.x, p.y, 0));
-    }
-	makeLine( line );
-
-
+function makeLine( geo ) {
+    var g = new MeshLine();
+    g.setGeometry( geo );
+    var material = new MeshLineMaterial( {
+        useMap: false,
+        color: Utils.getRandomColor(),
+        opacity: 1,
+        resolution: new THREE.Vector2( window.innerWidth , window.innerHeight ),
+        sizeAttenuation: false,
+        lineWidth: 20,
+    });
+    var mesh = new THREE.Mesh( g.geometry, material );
+    return mesh;
 }
 
+function addLineFromPnts(pnts, useMeshLines= true){
+    if(!useMeshLines){
+        const material = new THREE.LineBasicMaterial( { color: Utils.getRandomColor() } );
+        const pnts3d = [];
+        for(const p of pnts){   
+            pnts3d.push(new THREE.Vector3(p.x, p.y, 0));
+        }
+        const geometry = new THREE.BufferGeometry().setFromPoints( pnts3d );
+        const line = new THREE.Line( geometry, material );
+        globals.scene.add( line );
+    }
+    else{
+
+        var line = new THREE.Geometry();
+        for(const p of pnts){   
+            line.vertices.push( new THREE.Vector3(p.x, p.y, 0));
+        }
+        globals.scene.add( makeLine( line ));
+    }
+}
 
 function vec2SvgToThree(svgVec, scale = 0.05){
     let scaledVec = new THREE.Vector2(svgVec.x, svgVec.y - svgInfo.height).multiplyScalar(scale);
@@ -200,5 +210,6 @@ function vec2SvgToThree(svgVec, scale = 0.05){
 }
 
 export {
-    draw
+    draw,
+    init
 }
