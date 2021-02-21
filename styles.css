@@ -1,7 +1,13 @@
 * {
-  /*remove default padding added by borwser*/
+  /*remove default padding added by browser*/
   margin: 0;
   padding: 0;
+}
+html, body {
+  /* disables the swipe to change page on some browsers */
+  overscroll-behavior-x: none;
+  /* disables webpage dragging on mobile devices */
+  overflow: hidden;
 }
 #threeCanvas {
   /*should not need to do this*/
