@@ -21,85 +21,99 @@ function loadSvg(){
     let gPathElems = xmlDoc.getElementsByTagName("path");
     let pathGeoms = [];
     let pathStrings = [];
-    // for(const pathElem of gPathElems){
-    //     let pathStr = pathElem.getAttribute("d");
-    //     pathStrings.push(pathStr);
-    //     pathGeoms.push(getGeometryFromPathStr(pathStr));
-    // }
-
-    var s = "M 58.651929,46.059857 c 0.796567,0.398856 1.99342,0.319857 3.120988,0.180143 5.4,-0.66 13.08,-1.76 18.48,-2.24 1.157425,-0.08971 2.576567,0.01086 3.52342,0.330429";
-    pathGeoms.push(getGeometryFromPathStr(-));
-        
+    for(const pathElem of gPathElems){
+        let pathStr = pathElem.getAttribute("d");
+        pathStrings.push(pathStr);
+        pathGeoms.push(getGeometryFromPathStr(pathStr));
+    }
     return pathGeoms;
 }
 
 function getGeometryFromPathStr(pathStr){
-    function getNextDelimIdx(){
-        let valChars = ".0123456789"; 
-        if(pathStr[0] == '-')
-        {
-            valChars+= '-';
+    function pullVal(){
+        const valRegex = /-?\d*\.?\d+/;
+        const match = pathStr.match(valRegex);
+        if(match != null){
+            pathStr = pathStr.replace(valRegex, '');
+            return parseFloat(match);
         }
-        for (let idx = 0; idx < pathStr.length; idx++) {
-            if(!valChars.includes(pathStr[idx]))
-            {
-                return idx;
-            }
-        }
-        return pathStr.length; 
-    }
-    function pullPnt(remTrlChar = false){
-        let idx = getNextDelimIdx(pathStr);
-        let x = parseFloat(pathStr.substring(0,idx));
-        pathStr = pathStr.substring(idx + 1, pathStr.length)
-        idx = getNextDelimIdx(pathStr);
-        let s = pathStr.substring(0,idx)
-        let y = parseFloat(s);
-        let yIdx = idx; 
-        if(remTrlChar && yIdx < (pathStr.length - 1)){
-            yIdx++;
-        }
-        pathStr = pathStr.substring(yIdx, pathStr.length)
-        return svgToThree(new THREE.Vector2(x,y));
+        return;
     }
     function pullCommand(){
-
+        const comRegex = /[McC]/;
+        const match = pathStr.match(comRegex);
+        if(match != null){
+            pathStr = pathStr.replace(comRegex, '');
+            return match[0];
+        }
+        return '';
     }
-    let geometry = [];
-    let lastPnt = new THREE.Vector2();
-    while(pathStr.length > 0){
-        const commChar = pullCommand(); 
+    function cleanStr(){
+        const clnRegex = / *,?/;
+        let match = pathStr.match(clnRegex);
+        while(match != ''){
+            pathStr = pathStr.replace(clnRegex, '');
+            match = pathStr.match(clnRegex);
+        } 
+    }
+    function runCommand(commChar){
         switch(commChar){
             case 'M':
-                lastPnt = pullPnt();
+                const moveX = pullVal();
+                const moveY = pullVal();
+                lastPnt = new THREE.Vector2(moveX, moveY);
+                cleanStr();
                 break;
             case 'C':
-                let absCubBez = 
-                {
-                    type: "cubicBezier",
-                    p1 : new THREE.Vector2().add(lastPnt),
-                    p2 : pullPnt(true ),
-                    p3 : pullPnt(true ),
-                    p4 : pullPnt(false),
-                }
-                lastPnt = absCubBez.p4;
-                geometry.push(absCubBez);
-                break;
             case 'c':
-                let relCubBez = 
+                const p2x = pullVal();
+                const p2y = pullVal();
+                const p3x = pullVal();
+                const p3y = pullVal();
+                const p4x = pullVal();
+                const p4y = pullVal();
+                cleanStr();
+                let cubeBez = {}
+                if(commChar == 'C')
                 {
-                    type: "cubicBezier",
-                    p1 : new THREE.Vector2().add(lastPnt),
-                    p2 : pullPnt(true ).add(lastPnt),
-                    p3 : pullPnt(true ).add(lastPnt),
-                    p4 : pullPnt(false).add(lastPnt),
+                    cubeBez = 
+                    {
+                        type: "cubicBezier",
+                        p1 : new THREE.Vector2().add(lastPnt),
+                        p2 : new THREE.Vector2(p2x, p2y),
+                        p3 : new THREE.Vector2(p3x, p3y),
+                        p4 : new THREE.Vector2(p4x, p4y),
+                    }
                 }
-                lastPnt = relCubBez.p4;
-                geometry.push(relCubBez);
+                else
+                {
+                    cubeBez = 
+                    {
+                        type: "cubicBezier",
+                        p1 : new THREE.Vector2().add(lastPnt),
+                        p2 : new THREE.Vector2(p2x, p2y).add(lastPnt),
+                        p3 : new THREE.Vector2(p3x, p3y).add(lastPnt),
+                        p4 : new THREE.Vector2(p4x, p4y).add(lastPnt),
+                    }
+                }
+                lastPnt = cubeBez.p4;
+                geometry.push(cubeBez);
                 break;
-            default:
-                // Use the same command as last time
         }
+    }
+    const geometry = [];
+    let lastPnt = new THREE.Vector2();
+    let lastComChar = '';
+    while(pathStr.length > 0){
+        let commChar = pullCommand();
+        if(commChar == '' && lastComChar == ''){
+            return;
+        }
+        else if(commChar == ''){
+            commChar = lastComChar;
+        }
+        runCommand(commChar);
+        lastComChar = commChar;
     }
     return geometry;
 }
@@ -110,11 +124,10 @@ function draw(){
         for(const geo of geoms){
             if(geo.type == "cubicBezier")
             {
-                scaleBezier(geo, 0.1);
                 const noPnts = 30;
                 const pnts = [];
                 for (let i = 0; i < noPnts; i++) {
-                    pnts.push(getPntOnCubicBezier(i/noPnts, geo ));
+                    pnts.push(vec2SvgToThree(getPntOnCubicBezier(i/noPnts, geo)));
                 }   
                 addLineFromPnts(pnts);
             }
@@ -133,7 +146,7 @@ function getPntOnCubicBezier(t, cB){
 }
 
 function addLineFromPnts(pnts){
-    const material = new THREE.LineBasicMaterial( { color: 0x0000ff } );
+    const material = new THREE.LineBasicMaterial( { color: 0x0000ff ,	linewidth: 10 } );
     const pnts3d = [];
     for(const p of pnts){
         pnts3d.push(new THREE.Vector3(p.x, p.y, 0));
@@ -143,15 +156,10 @@ function addLineFromPnts(pnts){
     globals.scene.add( line );
 }
 
-function scaleBezier(cB, scale){
-    cB.p1.multiplyScalar(scale);
-    cB.p2.multiplyScalar(scale);
-    cB.p3.multiplyScalar(scale);
-    cB.p4.multiplyScalar(scale);
-}
 
-function svgToThree(svgVec){
-    return new THREE.Vector2(svgVec.x, -svgVec.y);
+function vec2SvgToThree(svgVec, scale = 0.05){
+    let scaledVec = new THREE.Vector2(svgVec.x, svgVec.y - svgInfo.height).multiplyScalar(scale);
+    return new THREE.Vector2(scaledVec.x, -scaledVec.y);
 }
 
 export {

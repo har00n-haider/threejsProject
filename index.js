@@ -40,8 +40,8 @@ function initialise() {
   const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
   globals.canvas = canvas;
   globals.mainCamera = camera;
-  camera.position.set(0, 5, 10);
-  camera.lookAt(new THREE.Vector3(0, 0, 0));
+  camera.position.set(2, 2, 7);
+  camera.lookAt(new THREE.Vector3(2, 2, 0));
 
   // scene
   const scene = new THREE.Scene();
@@ -103,8 +103,6 @@ function render(curTimeMilliSec) {
   globals.lastTimeMilliSec = curTimeMilliSec;
 
   globals.debugger.update();
-  // TODO: does this need tp be in here?
-  globals.orbitControls.update();
   globals.gameObjectManager.update();
   globals.renderer.render(globals.scene, globals.mainCamera);
   requestAnimationFrame(render);
@@ -119,10 +117,10 @@ function setupGameObjects() {
   globals.scene.add(grid);
 
   // controls
-  globals.orbitControls = new OrbitControls(
-    globals.mainCamera,
-    globals.renderer.domElement,
-  );
+  // globals.orbitControls = new OrbitControls(
+  //   globals.mainCamera,
+  //   globals.renderer.domElement,
+  // );
 
   // debug axes
   const axes = new THREE.AxesHelper(5);
