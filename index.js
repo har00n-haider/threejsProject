@@ -73,7 +73,7 @@ function initialise() {
   addLight(5, 5, 2);
   addLight(-5, 5, 5);
 
-  // // sky box
+  // sky box
   // const loader = new THREE.CubeTextureLoader();
   // const texture = loader.load([
   //     './resources/posx.jpg',
@@ -83,7 +83,7 @@ function initialise() {
   //     './resources/posz.jpg',
   //     './resources/negz.jpg',
   // ]);
-  // this._scene.background = texture;
+  // globals.scene.background = texture;
 }
 
 function onCanvasResize() {

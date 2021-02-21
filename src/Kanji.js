@@ -1,6 +1,8 @@
 import globals from '../lib/gameEngine/Globals.js';
 import * as THREE from '../lib/three.module.js';
 import * as Utils from '../lib/gameEngine/utils/Utils.js'
+import * as m from '../lib/THREE.MeshLine.js';
+import { MeshLine, MeshLineMaterial } from '../lib/THREE.MeshLine.js';
 
 function readStringFromFileAtPath(pathOfFileToReadFrom)
 {
@@ -14,14 +16,14 @@ function readStringFromFileAtPath(pathOfFileToReadFrom)
 const svgInfo = {}
 
 function loadSvg(){
-    // var svgStr = readStringFromFileAtPath('assets/0f9af.svg');
+    var svgStr = readStringFromFileAtPath('assets/0f9af.svg');
     // var svgStr = readStringFromFileAtPath('assets/0f9af_edited.svg');
-    var svgStr = readStringFromFileAtPath('assets/04ff5.svg');
+    // Doesn't work
+    // var svgStr = readStringFromFileAtPath('assets/04ff5.svg');
     // var svgStr = readStringFromFileAtPath('assets/05a3c.svg');
     // var svgStr = readStringFromFileAtPath('assets/05a49.svg');
     // var svgStr = readStringFromFileAtPath('assets/05a9a.svg');
     // var svgStr = readStringFromFileAtPath('assets/05b80.svg');
-
 
     let parser = new DOMParser();
     let xmlDoc = parser.parseFromString(svgStr, "image/svg+xml");
@@ -156,14 +158,39 @@ function getPntOnCubicBezier(t, cB){
 }
 
 function addLineFromPnts(pnts){
-    const material = new THREE.LineBasicMaterial( { color: Utils.getRandomColor() } );
-    const pnts3d = [];
-    for(const p of pnts){   
-        pnts3d.push(new THREE.Vector3(p.x, p.y, 0));
+    // const material = new THREE.LineBasicMaterial( { color: Utils.getRandomColor() } );
+    // const pnts3d = [];
+    // for(const p of pnts){   
+    //     pnts3d.push(new THREE.Vector3(p.x, p.y, 0));
+    // }
+    // const geometry = new THREE.BufferGeometry().setFromPoints( pnts3d );
+    // const line = new THREE.Line( geometry, material );
+    // globals.scene.add( line );
+
+    function makeLine( geo ) {
+        var g = new MeshLine();
+        g.setGeometry( geo );
+        var material = new MeshLineMaterial( {
+            useMap: false,
+            color: 'blue',
+            opacity: 1,
+            // Should be window width/height:
+            resolution: new THREE.Vector2( 1000, 800 ),
+            sizeAttenuation: false,
+            lineWidth: 10,
+        });
+        var mesh = new THREE.Mesh( g.geometry, material );
+        globals.scene.add( mesh );
     }
-    const geometry = new THREE.BufferGeometry().setFromPoints( pnts3d );
-    const line = new THREE.Line( geometry, material );
-    globals.scene.add( line );
+
+	var line = new THREE.Geometry();
+
+    for(const p of pnts){   
+        line.vertices.push( new THREE.Vector3(p.x, p.y, 0));
+    }
+	makeLine( line );
+
+
 }
 
 
