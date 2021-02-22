@@ -33,20 +33,31 @@ function initialise() {
   }, false);
 
   // camera
-  const fov = 60;
+
+  // perspective
+  // const fov = 60;
+  // const aspect = window.innerWidth / window.innerHeight;
+  // const near = 0.1;
+  // const far = 1000;
+  // const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+
+  // ortho 
+  const frustumSize = 1000;
   const aspect = window.innerWidth / window.innerHeight;
   const near = 0.1;
   const far = 1000;
-  const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+  const camera = new THREE.OrthographicCamera( frustumSize * aspect / - 2, frustumSize * aspect / 2, frustumSize / 2, frustumSize / - 2, near, far );
+  camera.orthoSize = frustumSize;
+  camera.position.set(2, 3, 10);
+  // camera.lookAt(new THREE.Vector3(2, 3, 0));
+
   globals.canvas = canvas;
   globals.mainCamera = camera;
-  camera.position.set(2, 3, 5);
-  camera.lookAt(new THREE.Vector3(2, 3, 0));
 
   // scene
   const scene = new THREE.Scene();
   globals.scene = scene;
-  scene.background = new THREE.Color('#B19CD9');
+  scene.background = new THREE.Color('#c4dbff');
 
   // lights
   function addLight(...pos) {
@@ -86,8 +97,22 @@ function initialise() {
   // globals.scene.background = texture;
 }
 
+function updateOrthCamera(camera){
+  const frustumSize = 1000;
+  const aspect = window.innerWidth / window.innerHeight;
+  camera.left   = frustumSize * aspect / - 2; 
+  camera.right  = frustumSize * aspect / 2;
+  camera.top    = frustumSize / 2;
+  camera.bottom = frustumSize / - 2;
+}
+
 function onCanvasResize() {
-  globals.mainCamera.aspect = window.innerWidth / window.innerHeight;
+  if(globals.mainCamera.isOrthographicCamera){
+    updateOrthCamera(globals.mainCamera);
+  }
+  else{
+    globals.mainCamera.aspect = window.innerWidth / window.innerHeight;
+  }
   globals.mainCamera.updateProjectionMatrix();
   globals.renderer.setSize(window.innerWidth, window.innerHeight, false);
 }
@@ -117,18 +142,18 @@ function setupGameObjects() {
   globals.scene.add(grid);
 
   // controls
-  // globals.orbitControls = new OrbitControls(
-  //   globals.mainCamera,
-  //   globals.renderer.domElement,
-  // );
+  globals.orbitControls = new OrbitControls(
+    globals.mainCamera,
+    globals.renderer.domElement,
+  );
 
   // debug axes
   const axes = new THREE.AxesHelper(5);
   globals.scene.add(axes);
 
   // Initialise game objects
-  globals.gameObjectManager = new GameObjectManager();
   globals.inputManager = new InputManager(globals.renderer.domElement);
+  globals.gameObjectManager = new GameObjectManager();
   globals.debugger = new Debugger(globals, document.getElementById('debugWrapper'));
 
   Kanji.init();

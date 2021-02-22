@@ -6,15 +6,20 @@ import { MeshLine, MeshLineMaterial } from '../lib/THREE.MeshLine.js';
 
 let line = {};
 
+//#region input kanji
+
 function init(){
 
-    makeLine()
-    globals.inputManager.moveEvent.regCb((pointerPos)=>{
-
-        // draw shit
+    globals.inputManager.moveEvent.regCb((p)=>{
 
     });
 }
+
+//#endregion
+
+//#region svg parsing 
+
+const svgInfo = {}
 
 function readStringFromFileAtPath(pathOfFileToReadFrom){
     var request = new XMLHttpRequest();
@@ -23,8 +28,6 @@ function readStringFromFileAtPath(pathOfFileToReadFrom){
     var returnValue = request.responseText;
     return returnValue;
 }
-
-const svgInfo = {}
 
 function loadSvg(){
     var svgStr = readStringFromFileAtPath('assets/0f9af.svg');
@@ -35,7 +38,6 @@ function loadSvg(){
     // var svgStr = readStringFromFileAtPath('assets/05a49.svg');
     // var svgStr = readStringFromFileAtPath('assets/05a9a.svg');
     // var svgStr = readStringFromFileAtPath('assets/05b80.svg');
-
     let parser = new DOMParser();
     let xmlDoc = parser.parseFromString(svgStr, "image/svg+xml");
     svgInfo.width  = parseInt(xmlDoc.getElementsByTagName("svg")[0].getAttribute('width'));
@@ -51,6 +53,11 @@ function loadSvg(){
     return pathGeoms;
 }
 
+/**
+ * 
+ * Uses regex to get the SVG parametric objects from the d 
+ * 
+ */
 function getGeometryFromPathStr(pathStr){
     function pullVal(){
         const valRegex = /-?\d*\.?\d+/;
@@ -140,23 +147,6 @@ function getGeometryFromPathStr(pathStr){
     return geometry;
 }
 
-function draw(){
-    let pathGeoms = loadSvg();
-    for(const geoms of pathGeoms){
-        for(const geo of geoms){
-            if(geo.type == "cubicBezier")
-            {
-                const noPnts = 30;
-                const pnts = [];
-                for (let i = 0; i < noPnts; i++) {
-                    pnts.push(vec2SvgToThree(getPntOnCubicBezier(i/noPnts, geo)));
-                }   
-                addLineFromPnts(pnts);
-            }
-        }
-    }
-}
-
 function getPntOnCubicBezier(t, cB){
     var ti = 1 - t;
     const term1 = new THREE.Vector2().add(cB.p1).multiplyScalar(ti*ti*ti)
@@ -167,10 +157,46 @@ function getPntOnCubicBezier(t, cB){
     return r;
 }
 
+//#endregion
 
-function makeLine( geo ) {
+
+function drawKanji(){
+    let pathGeoms = loadSvg();
+    for(const geoms of pathGeoms){
+        for(const geo of geoms){
+            if(geo.type == "cubicBezier")
+            {
+                const noPnts = 30;
+                const pnts = [];
+                for (let i = 0; i < noPnts; i++) {
+                    pnts.push(vec2SvgToThree(getPntOnCubicBezier(i/noPnts, geo)));
+                }   
+                globals.scene.add(getMeshLineFromPnts(pnts));
+            }
+        }
+    }
+}
+
+//#region utility functions
+
+function getLineFromPnts( pnts ){
+    const material = new THREE.LineBasicMaterial( { color: Utils.getRandomColor() } );
+    const pnts3d = [];
+    for(const p of pnts){   
+        pnts3d.push(new THREE.Vector3(p.x, p.y, 0));
+    }
+    const geometry = new THREE.BufferGeometry().setFromPoints( pnts3d );
+    const line = new THREE.Line( geometry, material );
+    return line;
+}
+
+function getMeshLineFromPnts( pnts ) {
+    var line = new THREE.Geometry();
+    for(const p of pnts){   
+        line.vertices.push( new THREE.Vector3(p.x, p.y, 0));
+    }
     var g = new MeshLine();
-    g.setGeometry( geo );
+    g.setGeometry( line  );
     var material = new MeshLineMaterial( {
         useMap: false,
         color: Utils.getRandomColor(),
@@ -183,33 +209,14 @@ function makeLine( geo ) {
     return mesh;
 }
 
-function addLineFromPnts(pnts, useMeshLines= true){
-    if(!useMeshLines){
-        const material = new THREE.LineBasicMaterial( { color: Utils.getRandomColor() } );
-        const pnts3d = [];
-        for(const p of pnts){   
-            pnts3d.push(new THREE.Vector3(p.x, p.y, 0));
-        }
-        const geometry = new THREE.BufferGeometry().setFromPoints( pnts3d );
-        const line = new THREE.Line( geometry, material );
-        globals.scene.add( line );
-    }
-    else{
-
-        var line = new THREE.Geometry();
-        for(const p of pnts){   
-            line.vertices.push( new THREE.Vector3(p.x, p.y, 0));
-        }
-        globals.scene.add( makeLine( line ));
-    }
-}
-
 function vec2SvgToThree(svgVec, scale = 0.05){
     let scaledVec = new THREE.Vector2(svgVec.x, svgVec.y - svgInfo.height).multiplyScalar(scale);
     return new THREE.Vector2(scaledVec.x, -scaledVec.y);
 }
 
+//#endregion
+
 export {
-    draw,
+    drawKanji as draw,
     init
 }
