@@ -42,14 +42,19 @@ function initialise() {
   // const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 
   // ortho 
-  const frustumSize = 1000;
+  globals.orthoSize = 5;
   const aspect = window.innerWidth / window.innerHeight;
   const near = 0.1;
   const far = 1000;
-  const camera = new THREE.OrthographicCamera( frustumSize * aspect / - 2, frustumSize * aspect / 2, frustumSize / 2, frustumSize / - 2, near, far );
-  camera.orthoSize = frustumSize;
-  camera.position.set(2, 3, 10);
-  // camera.lookAt(new THREE.Vector3(2, 3, 0));
+  const camera = new THREE.OrthographicCamera( 
+    globals.orthoSize * aspect / - 2, 
+    globals.orthoSize * aspect / 2, 
+    globals.orthoSize / 2, 
+    globals.orthoSize / - 2, 
+    near,
+    far );
+  camera.position.set(0.3, 2.5, 10);
+  camera.lookAt(new THREE.Vector3(0.3, 2.5, 0));
 
   globals.canvas = canvas;
   globals.mainCamera = camera;
@@ -98,12 +103,11 @@ function initialise() {
 }
 
 function updateOrthCamera(camera){
-  const frustumSize = 1000;
   const aspect = window.innerWidth / window.innerHeight;
-  camera.left   = frustumSize * aspect / - 2; 
-  camera.right  = frustumSize * aspect / 2;
-  camera.top    = frustumSize / 2;
-  camera.bottom = frustumSize / - 2;
+  camera.left   = globals.orthoSize * aspect / - 2; 
+  camera.right  = globals.orthoSize * aspect / 2;
+  camera.top    = globals.orthoSize / 2;
+  camera.bottom = globals.orthoSize / - 2;
 }
 
 function onCanvasResize() {
@@ -141,11 +145,11 @@ function setupGameObjects() {
   const grid = new InfiniteGridHelper(0.5, 100, new THREE.Color('white'), 100);
   globals.scene.add(grid);
 
-  // controls
-  globals.orbitControls = new OrbitControls(
-    globals.mainCamera,
-    globals.renderer.domElement,
-  );
+  // default orbit controls
+  // globals.orbitControls = new OrbitControls(
+  //   globals.mainCamera,
+  //   globals.renderer.domElement,
+  // );
 
   // debug axes
   const axes = new THREE.AxesHelper(5);
