@@ -131,6 +131,7 @@ function render(curTimeMilliSec) {
   globals.deltaTimeMillSec = curTimeMilliSec - globals.lastTimeMilliSec;
   globals.lastTimeMilliSec = curTimeMilliSec;
 
+  Kanji.update();
   globals.debugger.update();
   globals.gameObjectManager.update();
   globals.renderer.render(globals.scene, globals.mainCamera);
@@ -146,10 +147,10 @@ function setupGameObjects() {
   globals.scene.add(grid);
 
   // default orbit controls
-  // globals.orbitControls = new OrbitControls(
-  //   globals.mainCamera,
-  //   globals.renderer.domElement,
-  // );
+  globals.orbitControls = new OrbitControls(
+    globals.mainCamera,
+    globals.renderer.domElement,
+  );
 
   // debug axes
   const axes = new THREE.AxesHelper(5);
@@ -160,7 +161,8 @@ function setupGameObjects() {
   globals.gameObjectManager = new GameObjectManager();
   globals.debugger = new Debugger(globals, document.getElementById('debugWrapper'));
 
-  Kanji.draw();
+  Kanji.init();
+  Kanji.drawKanji();
 }
 
 function setupDatGUI(){

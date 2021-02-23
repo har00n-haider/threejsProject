@@ -10,6 +10,15 @@ let line;
 const MAX_POINTS = 500;
 let drawCount;
 
+function init(){
+    getLine();
+    globals.scene.add(line);
+    updatePositions();
+    // globals.inputManager.moveEvent.regCb((p)=>{
+    //     linePosArr.push(p.pointerPos);
+    // });
+}
+
 function updatePositions() {
 	const positions = line.geometry.attributes.position.array;
 	let x, y, z, index;
@@ -18,25 +27,21 @@ function updatePositions() {
 		positions[ index ++ ] = x;
 		positions[ index ++ ] = y;
 		positions[ index ++ ] = z;
-		x += ( Math.random() - 0.5 ) * 30;
-		y += ( Math.random() - 0.5 ) * 30;
-		z += ( Math.random() - 0.5 ) * 30;
+		x += ( Math.random() - 0.5 ) * 0.3;
+		y += ( Math.random() - 0.5 ) * 0.3;
+		z += ( Math.random() - 0.5 ) * 0.3;
 	}
 }
 
 function getLine(){
-    // geometry
 	const geometry = new THREE.BufferGeometry();
-	// attributes
 	const positions = new Float32Array( MAX_POINTS * 3 ); // 3 vertices per point
-	geometry.addAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
-	// drawcalls
+	geometry.setAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
 	drawCount = 2; // draw the first 2 points, only
 	geometry.setDrawRange( 0, drawCount );
-	// material
 	const material = new THREE.LineBasicMaterial( { color: 0xff0000 } );
-	// line
 	line = new THREE.Line( geometry,  material );
+    return line;
 }
 
 function update(){
@@ -46,7 +51,7 @@ function update(){
 		// periodically, generate new data
 		updatePositions();
 		line.geometry.attributes.position.needsUpdate = true; // required after the first render
-		line.material.color.setHSL( Math.random(), 1, 0.5 );
+		line.material.color.setHSL( 2, 1, 0.5 );
 	}
 }
 
@@ -194,7 +199,6 @@ function getPntOnCubicBezier(t, cB){
 
 //#endregion
 
-
 function drawKanji(){
     let pathGeoms = loadSvg();
     for(const geoms of pathGeoms){
@@ -252,6 +256,7 @@ function vec2SvgToThree(svgVec, scale = 0.05){
 //#endregion
 
 export {
-    drawKanji as draw,
-    init
+    drawKanji,
+    init,
+    update
 }
