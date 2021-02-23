@@ -5,61 +5,61 @@ import * as m from '../lib/THREE.MeshLine.js';
 import { MeshLine, MeshLineMaterial } from '../lib/THREE.MeshLine.js';
 
 //#region input kanji
+
 let linePosArr = []
-let line;
+let line = undefined;
 const MAX_POINTS = 500;
-let drawCount;
+let drawCount = 0;
+let posIdx = 0;
 
 function init(){
     getLine();
     globals.scene.add(line);
-    updatePositions();
-    // globals.inputManager.moveEvent.regCb((p)=>{
-    //     linePosArr.push(p.pointerPos);
-    // });
-}
-
-function updatePositions() {
-	const positions = line.geometry.attributes.position.array;
-	let x, y, z, index;
-	x = y = z = index = 0;
-	for ( let i = 0, l = MAX_POINTS; i < l; i ++ ) {
-		positions[ index ++ ] = x;
-		positions[ index ++ ] = y;
-		positions[ index ++ ] = z;
-		x += ( Math.random() - 0.5 ) * 0.3;
-		y += ( Math.random() - 0.5 ) * 0.3;
-		z += ( Math.random() - 0.5 ) * 0.3;
-	}
+    updateLinePositions();
 }
 
 function getLine(){
 	const geometry = new THREE.BufferGeometry();
 	const positions = new Float32Array( MAX_POINTS * 3 ); // 3 vertices per point
 	geometry.setAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
-	drawCount = 2; // draw the first 2 points, only
 	geometry.setDrawRange( 0, drawCount );
-	const material = new THREE.LineBasicMaterial( { color: 0xff0000 } );
+	const material = new THREE.LineBasicMaterial( { color: 'red' } );
 	line = new THREE.Line( geometry,  material );
     return line;
 }
 
+function updateLinePositions() {
+    if(globals.inputManager.pointerIsDown){
+        const positions = line.geometry.attributes.position.array;
+        const camera = globals.mainCamera;
+        const curPos = globals.inputManager.pointerPos;
+        const wldPos = (new THREE.Vector3()).set(
+            curPos.x, 
+            curPos.y, 
+            -1
+        ).unproject( camera );
+        positions[posIdx++] = wldPos.x ;
+        positions[posIdx++] = wldPos.y ;
+        positions[posIdx++] = 0;
+        return true;
+    }
+    return false;
+}
+
 function update(){
-	drawCount = ( drawCount + 1 ) % MAX_POINTS;
-	line.geometry.setDrawRange( 0, drawCount );
-	if ( drawCount === 0 ) {
-		// periodically, generate new data
-		updatePositions();
-		line.geometry.attributes.position.needsUpdate = true; // required after the first render
-		line.material.color.setHSL( 2, 1, 0.5 );
-	}
+    let pntAdded = updateLinePositions();
+    if(pntAdded && (drawCount + 1 ) < MAX_POINTS){
+        drawCount++;
+    }
+    line.geometry.setDrawRange( 0, drawCount );
+    // required after the first render
+    line.geometry.attributes.position.needsUpdate = true;
 }
 
 //#endregion
 
 //#region svg parsing 
 
-const svgInfo = {}
 
 function readStringFromFileAtPath(pathOfFileToReadFrom){
     var request = new XMLHttpRequest();
@@ -67,6 +67,16 @@ function readStringFromFileAtPath(pathOfFileToReadFrom){
     request.send(null);
     var returnValue = request.responseText;
     return returnValue;
+}
+
+const svgInfo = {}
+
+function setSvgInfo(width, height){
+    svgInfo.width  = width;
+    svgInfo.height = height;
+    svgInfo.scale = 0.05;
+    svgInfo.scaledWidth  = svgInfo.width * svgInfo.scale;
+    svgInfo.scaledHeight = svgInfo.height * svgInfo.scale;
 }
 
 function loadSvg(){
@@ -80,8 +90,10 @@ function loadSvg(){
     // var svgStr = readStringFromFileAtPath('assets/05b80.svg');
     let parser = new DOMParser();
     let xmlDoc = parser.parseFromString(svgStr, "image/svg+xml");
-    svgInfo.width  = parseInt(xmlDoc.getElementsByTagName("svg")[0].getAttribute('width'));
-    svgInfo.height = parseInt(xmlDoc.getElementsByTagName("svg")[0].getAttribute('height'));
+    setSvgInfo(
+        parseInt(xmlDoc.getElementsByTagName("svg")[0].getAttribute('width')),
+        parseInt(xmlDoc.getElementsByTagName("svg")[0].getAttribute('height'))
+    );
     let gPathElems = xmlDoc.getElementsByTagName("path");
     let pathGeoms = [];
     let pathStrings = [];
@@ -199,6 +211,9 @@ function getPntOnCubicBezier(t, cB){
 
 //#endregion
 
+
+//#region public functions
+
 function drawKanji(){
     let pathGeoms = loadSvg();
     for(const geoms of pathGeoms){
@@ -215,6 +230,8 @@ function drawKanji(){
         }
     }
 }
+
+//#endregion
 
 //#region utility functions
 
@@ -248,8 +265,8 @@ function getMeshLineFromPnts( pnts ) {
     return mesh;
 }
 
-function vec2SvgToThree(svgVec, scale = 0.05){
-    let scaledVec = new THREE.Vector2(svgVec.x, svgVec.y - svgInfo.height).multiplyScalar(scale);
+function vec2SvgToThree(svgVec){
+    let scaledVec = new THREE.Vector2(svgVec.x, svgVec.y - svgInfo.height).multiplyScalar(svgInfo.scale);
     return new THREE.Vector2(scaledVec.x, -scaledVec.y);
 }
 
