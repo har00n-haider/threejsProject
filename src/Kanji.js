@@ -50,14 +50,6 @@ function update(){
 	}
 }
 
-function init(){
-    const line = makeLine();
-    globals.add(line);
-    globals.inputManager.moveEvent.regCb((p)=>{
-        linePosArr.push(p.pointerPos);
-    });
-}
-
 //#endregion
 
 //#region svg parsing 

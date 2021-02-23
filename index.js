@@ -160,8 +160,6 @@ function setupGameObjects() {
   globals.gameObjectManager = new GameObjectManager();
   globals.debugger = new Debugger(globals, document.getElementById('debugWrapper'));
 
-  Kanji.init();
-
   Kanji.draw();
 }
 
