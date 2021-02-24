@@ -1,61 +1,69 @@
 import Component from "../lib/gameEngine/ecs/Component.js";
+import * as THREE from '../lib/three.module.js';
+import globals from "../lib/gameEngine/Globals.js";
+
 
 class Stroke extends Component {
-    constructor(gameObject, config) {
-        super(gameObject);
+  constructor(gameObject, config) {
+    super(gameObject);
+    this.line = this.getLine();
+    this.gameObject.transform.add(this.line.object3d);
+  }
 
-        let linePosArr = []
-        let line = undefined;
-        let MAX_POINTS = 500;
-        let drawCount = 0;
-        let posIdx = 0;
-        
-        getLine();
-        globals.scene.add(line);
-        updateLinePositions();
-        
-    }
-    
-    update = () => {
-        let pntAdded = updateLinePositions();
-        if(pntAdded && (drawCount + 1 ) < MAX_POINTS){
-            drawCount++;
-        }
-        line.geometry.setDrawRange( 0, drawCount );
-        // required after the first render
-        line.geometry.attributes.position.needsUpdate = true;
-    }
+  update = () => {
+    this.updateLine(this.line);
+  }
 
-    destroy = () => {
-    }
+  destroy = () => {
+  }
 
-    getLine = () => {
-        const geometry = new THREE.BufferGeometry();
-        const positions = new Float32Array( MAX_POINTS * 3 ); // 3 vertices per point
-        geometry.setAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
-        geometry.setDrawRange( 0, drawCount );
-        const material = new THREE.LineBasicMaterial( { color: 'red' } );
-        line = new THREE.Line( geometry,  material );
-        return line;
+  getLine = () => {
+    // Line definition
+    const line = {
+      object3d    : {},
+      linePosArr  : [],
+      maxPoints   : 500,
+      drawCount   : 0,
+      posIdx      : 0,
+      completed   : false,
+      started     : false
     }
-    
-    updateLinePositions = () => {
-        if(globals.inputManager.pointerIsDown){
-            const positions = line.geometry.attributes.position.array;
-            const camera = globals.mainCamera;
-            const curPos = globals.inputManager.pointerPos;
-            const wldPos = (new THREE.Vector3()).set(
-                curPos.x, 
-                curPos.y, 
-                -1
-            ).unproject( camera );
-            positions[posIdx++] = wldPos.x ;
-            positions[posIdx++] = wldPos.y ;
-            positions[posIdx++] = 0;
-            return true;
-        }
-        return false;
+    const geometry = new THREE.BufferGeometry();
+    const positions = new Float32Array( line.maxPoints * 3 ); // 3 vertices per point
+    geometry.setAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
+    geometry.setDrawRange( 0, line.drawCount );
+    const material = new THREE.LineBasicMaterial( { color: 'red' } );
+    line.object3d = new THREE.Line( geometry,  material );
+    return line;
+  }
+
+  updateLine = (line) => {
+    if(globals.inputManager.pointerIsDown && !line.completed){
+      line.started = true;
+      const positions = line.object3d.geometry.attributes.position.array;
+      const camera = globals.mainCamera;
+      const curPos = globals.inputManager.pointerPos;
+      const wldPos = (new THREE.Vector3()).set(
+          curPos.x,
+          curPos.y,
+          -1
+      ).unproject( camera );
+      positions[line.posIdx++] = wldPos.x ;
+      positions[line.posIdx++] = wldPos.y ;
+      positions[line.posIdx++] = 0;
+      if((line.drawCount + 1 ) < line.maxPoints){
+        line.drawCount++;
+      }
+      line.object3d.geometry.setDrawRange( 0, line.drawCount );
+      // required after the first render
+      line.object3d.geometry.attributes.position.needsUpdate = true;
     }
+    else{
+      if(line.started){
+        line.completed = true;
+      }
+    }
+  }
 }
 
 export default Stroke;
