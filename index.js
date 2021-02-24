@@ -166,7 +166,6 @@ function setupGameObjects() {
     'KanjiManagerGo',
   );
   KanjiManagerGo.addComponent(KanjiManager);
-
 }
 
 function setupDatGUI(){

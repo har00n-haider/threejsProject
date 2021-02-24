@@ -47,9 +47,18 @@ function vec2SvgToThree(svgVec, svgInfo){
     return new THREE.Vector2(scaledVec.x, -scaledVec.y);
 }
 
+function addRefPntsToScene(refPnts, scene){
+  for (const pnt of refPnts) {
+    Utils.addPointAsSphere(
+      new THREE.Vector3(pnt.x, pnt.y, 0), 
+      scene);
+  }
+}
+
 export{
     getMeshLineFromPnts,
     getLineFromPnts,
     getPntOnCubicBezier,
-    vec2SvgToThree
+    vec2SvgToThree,
+    addRefPntsToScene
 }
