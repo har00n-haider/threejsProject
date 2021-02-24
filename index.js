@@ -12,7 +12,7 @@ import GameObjectManager from './lib/gameEngine/ecs/GameObjectManager.js';
 import AudioManager from './lib/gameEngine/utils/AudioManager.js';
 import * as Utils from './lib/gameEngine/utils/Utils.js';
 // Project specific stuff
-import * as Kanji from './src/Kanji.js';
+import KanjiManager from './src/KanjiManager.js';
 
 //#region Game engine stuff
 
@@ -131,7 +131,6 @@ function render(curTimeMilliSec) {
   globals.deltaTimeMillSec = curTimeMilliSec - globals.lastTimeMilliSec;
   globals.lastTimeMilliSec = curTimeMilliSec;
 
-  Kanji.update();
   globals.debugger.update();
   globals.gameObjectManager.update();
   globals.renderer.render(globals.scene, globals.mainCamera);
@@ -156,13 +155,18 @@ function setupGameObjects() {
   const axes = new THREE.AxesHelper(5);
   globals.scene.add(axes);
 
-  // Initialise game objects
+  // initialise game objects
   globals.inputManager = new InputManager(globals.renderer.domElement);
   globals.gameObjectManager = new GameObjectManager();
   globals.debugger = new Debugger(globals, document.getElementById('debugWrapper'));
 
-  Kanji.init();
-  Kanji.drawKanji();
+  // kanji game specific stuff
+  const KanjiManagerGo = globals.gameObjectManager.createGameObject(
+    globals.scene,
+    'KanjiManagerGo',
+  );
+  KanjiManagerGo.addComponent(KanjiManager);
+
 }
 
 function setupDatGUI(){
