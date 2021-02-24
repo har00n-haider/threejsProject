@@ -55,10 +55,31 @@ function addRefPntsToScene(refPnts, scene){
   }
 }
 
+function genRefPntsForLine(line){
+  const lnPnts = line.posArr;
+  if(lnPnts.length > 3){
+    let refPnts = [];
+    const halfDist = line.totalDist/2;
+    refPnts.push(lnPnts[0].clone());
+    let currDist = 0;
+    for (let i = 1; i < lnPnts.length; i++) {
+      currDist += lnPnts[i].clone().sub(lnPnts[i-1]).length();
+      if(currDist > halfDist){
+        refPnts.push(lnPnts[i]);
+        break;
+      }
+    }
+    refPnts.push(lnPnts[lnPnts.length - 1]);
+    return refPnts;
+  }
+  return [];
+}
+
 export{
     getMeshLineFromPnts,
     getLineFromPnts,
     getPntOnCubicBezier,
     vec2SvgToThree,
-    addRefPntsToScene
+    addRefPntsToScene,
+    genRefPntsForLine
 }

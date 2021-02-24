@@ -3,6 +3,7 @@ import { loadSvg } from './KanjiSVGParser.js';
 import { MeshLine, MeshLineMaterial } from '../lib/THREE.MeshLine.js';
 import * as kU from './KanjiUtility.js';
 import Stroke from "./Stroke.js";
+import RefStroke from "./RefStroke.js";
 import globals from "../lib/gameEngine/Globals.js";
 
 class Kanji extends Component {
@@ -10,16 +11,18 @@ class Kanji extends Component {
     super(gameObject);
 
     // reference kanji
-    this.drawKanji(kanjiPath);
+    this.refStrokes = []
+    this.curRefStroke = undefined;
+    this.getRefKanji(kanjiPath);
 
     // inputs strokes
-    this.inpStroke = []
+    this.inpStrokes = []
     this.curInpStroke = undefined;
-    this.genStroke();
+    this.genInpStroke();
   }
 
   //TODO: Have this use the GO with stroke component
-  drawKanji = (kanjiPath) => {
+  getRefKanji = (kanjiPath) => {
     let kanjiVecData = loadSvg(kanjiPath);
     for(const geoms of kanjiVecData.geometry){
       for(const geo of geoms){
@@ -38,20 +41,28 @@ class Kanji extends Component {
     }
   }
 
-  genStroke = () => {
+  genRefStroke = () => {
     const strokeGo = globals.gameObjectManager.createGameObject(
       this.gameObject.transform,
-      'strokeGo'
+      'refStrokeGo'
     );
-    strokeGo.addComponent(Stroke);
-    this.curInpStroke = strokeGo.getComponent(Stroke);
-    this.inpStroke.push(this.curInpStroke);
+    this.curRefStroke = strokeGo.addComponent(RefStroke);;
+    this.refStrokes.push(this.curRefStroke);    
+  }
+
+  genInpStroke = () => {
+    const strokeGo = globals.gameObjectManager.createGameObject(
+      this.gameObject.transform,
+      'inpStrokeGo'
+    );
+    this.curInpStroke = strokeGo.addComponent(Stroke);
+    this.inpStrokes.push(this.curInpStroke);
   }
 
   update = () => {
     if(this.curInpStroke.line != undefined){
       if(this.curInpStroke.line.completed){
-        this.genStroke();
+        this.genInpStroke();
       }
     }
   }

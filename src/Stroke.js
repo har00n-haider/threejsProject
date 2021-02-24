@@ -4,7 +4,7 @@ import globals from "../lib/gameEngine/Globals.js";
 import * as Ku from './KanjiUtility.js';
 
 class Stroke extends Component {
-  constructor(gameObject, config) {
+  constructor(gameObject) {
     super(gameObject);
     this.line = this.getLine();
     this.gameObject.transform.add(this.line.object3d);
@@ -21,7 +21,7 @@ class Stroke extends Component {
     // Line definition
     const line = {
       object3d    : {},
-      posVec2Arr  : [],
+      posArr  : [],
       maxPoints   : 500,
       drawCount   : 0,
       posIdx      : 0,
@@ -57,7 +57,7 @@ class Stroke extends Component {
         line.totalDist += diffVec.length();  
       }
       line.lastPnt = wldPos;
-      line.posVec2Arr.push(wldPos);
+      line.posArr.push(wldPos);
       
       positions[line.posIdx++] = wldPos.x ;
       positions[line.posIdx++] = wldPos.y ;
@@ -72,29 +72,10 @@ class Stroke extends Component {
     else{
       if(line.started && !line.completed){
         line.completed = true;
-        Ku.addRefPntsToScene(this.genRefPntsForLine(line), globals.scene);
+        //TODO: remove this debug line
+        Ku.addRefPntsToScene(Ku.genRefPntsForLine(line), globals.scene);
       }
     }
-  }
-
-  genRefPntsForLine = (line) => {
-    const lnPnts = line.posVec2Arr;
-    if(lnPnts.length > 3){
-      let refPnts = [];
-      const halfDist = line.totalDist/2;
-      refPnts.push(lnPnts[0].clone());
-      let currDist = 0;
-      for (let i = 1; i < lnPnts.length; i++) {
-        currDist += lnPnts[i].clone().sub(lnPnts[i-1]).length();
-        if(currDist > halfDist){
-          refPnts.push(lnPnts[i]);
-          break;
-        }
-      }
-      refPnts.push(lnPnts[lnPnts.length - 1]);
-      return refPnts;
-    }
-    return [];
   }
 }
 
