@@ -1,7 +1,7 @@
 import Component from "../lib/gameEngine/ecs/Component.js";
 import * as THREE from '../lib/three.module.js';
 import globals from "../lib/gameEngine/Globals.js";
-import * as Ku from './KanjiUtility.js';
+import * as ku from './KanjiUtility.js';
 
 class Stroke extends Component {
   constructor(gameObject) {
@@ -73,7 +73,7 @@ class Stroke extends Component {
       if(line.started && !line.completed){
         line.completed = true;
         //TODO: remove this debug line
-        Ku.addRefPntsToScene(Ku.genRefPntsForLine(line), globals.scene);
+        ku.addRefPntsToScene(ku.genRefPntsForLine(line), globals.scene);
       }
     }
   }

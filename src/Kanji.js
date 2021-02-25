@@ -1,7 +1,6 @@
 import Component from "../lib/gameEngine/ecs/Component.js";
 import { loadSvg } from './KanjiSVGParser.js'; 
 import { MeshLine, MeshLineMaterial } from '../lib/THREE.MeshLine.js';
-import * as kU from './KanjiUtility.js';
 import Stroke from "./Stroke.js";
 import RefStroke from "./RefStroke.js";
 import globals from "../lib/gameEngine/Globals.js";
@@ -23,21 +22,9 @@ class Kanji extends Component {
 
   //TODO: Have this use the GO with stroke component
   getRefKanji = (kanjiPath) => {
-    let kanjiVecData = loadSvg(kanjiPath);
-    for(const geoms of kanjiVecData.geometry){
-      for(const geo of geoms){
-        if(geo.type == "cubicBezier"){
-          const noPnts = 30;
-          const pnts = [];
-          for (let i = 0; i < noPnts; i++) {
-            pnts.push(kU.vec2SvgToThree(
-              kU.getPntOnCubicBezier(i/noPnts, geo),
-              kanjiVecData.svgInfo
-            ));
-          }   
-          this.gameObject.transform.add(kU.getMeshLineFromPnts(pnts));
-        } 
-      }
+    let kanjiStrokes = loadSvg(kanjiPath, 50);
+    for(const stroke of kanjiStrokes){
+      this.genRefStroke();
     }
   }
 

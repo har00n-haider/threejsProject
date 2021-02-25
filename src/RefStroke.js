@@ -6,7 +6,7 @@ import * as Ku from './KanjiUtility.js';
 class RefStroke extends Component {
   constructor(gameObject) {
     super(gameObject);
-
+    this.gameObject.transform.add(this.getLine());
   }
 
   update = () => {
@@ -16,6 +16,7 @@ class RefStroke extends Component {
   }
 
   getLine = () => {
+    return Ku.getMeshLineFromPnts(pnts);
   }
 
   updateLine = (line) => {

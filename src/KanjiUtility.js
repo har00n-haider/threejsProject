@@ -32,6 +32,11 @@ function getMeshLineFromPnts( pnts ) {
     return mesh;
 }
 
+/**
+ * 
+ * @param {*} t must me a value from 0 - 1
+ * @param {*} cB 
+ */
 function getPntOnCubicBezier(t, cB){
     var ti = 1 - t;
     const term1 = new THREE.Vector2().add(cB.p1).multiplyScalar(ti*ti*ti)
@@ -42,9 +47,36 @@ function getPntOnCubicBezier(t, cB){
     return r;
 }
 
+function getLengthOfCubicBezier(cB, res = 0.1){
+  let length = 0;
+  let curPnt = cB.p1;
+  for (let i = 0; i <= 1; i+=res) {
+    const newPnt = getPntOnCubicBezier(i, cB);
+    length += (new Vector2()).subVectors( newPNt - curPnt).length();
+    curPnt = newPnt;
+  }
+  return length;
+}
+
 function vec2SvgToThree(svgVec, svgInfo){
     let scaledVec = new THREE.Vector2(svgVec.x, svgVec.y - svgInfo.height).multiplyScalar(svgInfo.scale);
     return new THREE.Vector2(scaledVec.x, -scaledVec.y);
+}
+
+function genPntsForVectorPath(vectorPaths, pntsInStroke, svgInfo){
+  const pnts = [];
+  for(const vectorPath of vectorPaths){
+    switch(vectorPath.type){
+      case "cubicBezier":
+        for (let i = 0; i < pntsInStroke; i++) {
+          pnts.push(kU.vec2SvgToThree(
+            ku.getPntOnStroke(i/noPnts, path),
+            svgInfo
+          ));
+        }
+        break;
+    }
+  }
 }
 
 function addRefPntsToScene(refPnts, scene){
@@ -81,5 +113,7 @@ export{
     getPntOnCubicBezier,
     vec2SvgToThree,
     addRefPntsToScene,
-    genRefPntsForLine
+    genRefPntsForLine,
+    getLengthOfCubicBezier,
+    genPntsForVectorPath
 }

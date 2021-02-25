@@ -1,27 +1,29 @@
 import * as THREE from '../lib/three.module.js';
-
+import * as ku from './KanjiUtility.js';
 //#region  public 
 
-function loadSvg(pathToSvg){
-    var svgStr = readStringFromFileAtPath(pathToSvg);
-    let parser = new DOMParser();
-    let xmlDoc = parser.parseFromString(svgStr, "image/svg+xml");
-    const svgInfo = setSvgInfo(
-        parseInt(xmlDoc.getElementsByTagName("svg")[0].getAttribute('width')),
-        parseInt(xmlDoc.getElementsByTagName("svg")[0].getAttribute('height'))
-    );
-    let gPathElems = xmlDoc.getElementsByTagName("path");
-    const kanjiVecData = {}; 
-    let pathGeoms = [];
-    let pathStrings = [];
-    for(const pathElem of gPathElems){
-        let pathStr = pathElem.getAttribute("d");
-        pathStrings.push(pathStr);
-        pathGeoms.push(getGeometryFromPathStr(pathStr));
+function getStrokesFromSvg(pathToSvg, pntsInStroke){
+  // get raw data from file
+  var svgStr = readStringFromFileAtPath(pathToSvg);
+  let parser = new DOMParser();
+  let xmlDoc = parser.parseFromString(svgStr, "image/svg+xml");
+  const svgInfo = setSvgInfo(
+      parseInt(xmlDoc.getElementsByTagName("svg")[0].getAttribute('width')),
+      parseInt(xmlDoc.getElementsByTagName("svg")[0].getAttribute('height'))
+  );
+  let pathElems = xmlDoc.getElementsByTagName("path");
+  // get stroke from raw data
+  let strokes = [];
+  for(const pathElem of pathElems){
+    let pathStr = pathElem.getAttribute("d");
+    const vectorPaths = getVectorPathsFromPathStr(pathStr);
+    const rawStroke = {
+      strokeNo : pathElem.getAttribute('id').split('-')[1].replace('s',''),
+      points   : ku.genPntsForVectorPath(vectorPaths, pntsInStroke, svgInfo)
     }
-    kanjiVecData.geometry = pathGeoms;
-    kanjiVecData.svgInfo = svgInfo;
-    return kanjiVecData;
+    strokes.push(rawStroke);
+  }
+  return strokes;
 }
 
 //#endregion
@@ -30,11 +32,9 @@ function loadSvg(pathToSvg){
 //#region  private 
 
 /**
- * 
  * Uses regex to get the SVG parametric objects from the d 
- * 
  */
-function getGeometryFromPathStr(pathStr){
+function getVectorPathsFromPathStr(pathStr){
     function pullVal(){
         const valRegex = /-?\d*\.?\d+/;
         const match = pathStr.match(valRegex);
@@ -102,11 +102,11 @@ function getGeometryFromPathStr(pathStr){
                     }
                 }
                 lastPnt = cubeBez.p4;
-                geometry.push(cubeBez);
+                vectorPaths.push(cubeBez);
                 break;
         }
     }
-    const geometry = [];
+    const vectorPaths = [];
     let lastPnt = new THREE.Vector2();
     let lastComChar = '';
     while(pathStr.length > 0){
@@ -120,7 +120,7 @@ function getGeometryFromPathStr(pathStr){
         runCommand(commChar);
         lastComChar = commChar;
     }
-    return geometry;
+    return vectorPaths;
 }
 
 function readStringFromFileAtPath(pathOfFileToReadFrom){
@@ -145,7 +145,7 @@ function setSvgInfo(width, height){
 
 
 export {
-    loadSvg,
+    getStrokesFromSvg as loadSvg,
 }
 
 
