@@ -17,6 +17,7 @@ function getStrokesFromSvg(pathToSvg, pntsInStroke){
   for(const pathElem of pathElems){
     let pathStr = pathElem.getAttribute("d");
     const vectorPaths = getVectorPathsFromPathStr(pathStr);
+    // stroke definition
     const rawStroke = {
       strokeNo : pathElem.getAttribute('id').split('-')[1].replace('s',''),
       points   : ku.genPntsForVectorPath(vectorPaths, pntsInStroke, svgInfo)
@@ -104,6 +105,9 @@ function getVectorPathsFromPathStr(pathStr){
                 lastPnt = cubeBez.p4;
                 vectorPaths.push(cubeBez);
                 break;
+            default:
+              console.warn( 'unknown SVG command char: ' + commChar);
+              break;
         }
     }
     const vectorPaths = [];

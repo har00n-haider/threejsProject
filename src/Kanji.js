@@ -22,18 +22,18 @@ class Kanji extends Component {
 
   //TODO: Have this use the GO with stroke component
   getRefKanji = (kanjiPath) => {
-    let kanjiStrokes = loadSvg(kanjiPath, 50);
+    let kanjiStrokes = loadSvg(kanjiPath, 100);
     for(const stroke of kanjiStrokes){
-      this.genRefStroke();
+      this.genRefStroke(stroke);
     }
   }
 
-  genRefStroke = () => {
+  genRefStroke = (stroke) => {
     const strokeGo = globals.gameObjectManager.createGameObject(
       this.gameObject.transform,
       'refStrokeGo'
     );
-    this.curRefStroke = strokeGo.addComponent(RefStroke);;
+    this.curRefStroke = strokeGo.addComponent(RefStroke, stroke);;
     this.refStrokes.push(this.curRefStroke);    
   }
 

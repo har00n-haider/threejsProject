@@ -1,12 +1,13 @@
 import Component from "../lib/gameEngine/ecs/Component.js";
 import * as THREE from '../lib/three.module.js';
 import globals from "../lib/gameEngine/Globals.js";
-import * as Ku from './KanjiUtility.js';
+import * as ku from './KanjiUtility.js';
 
 class RefStroke extends Component {
-  constructor(gameObject) {
+  constructor(gameObject, stroke) {
     super(gameObject);
-    this.gameObject.transform.add(this.getLine());
+    this.gameObject.transform.add(ku.getLineFromPnts( stroke.points ));
+    this.number = stroke.strokeNo;
   }
 
   update = () => {
@@ -15,12 +16,6 @@ class RefStroke extends Component {
   destroy = () => {
   }
 
-  getLine = () => {
-    return Ku.getMeshLineFromPnts(pnts);
-  }
-
-  updateLine = (line) => {
-  }
 }
 
 export default RefStroke;
