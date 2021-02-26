@@ -42,7 +42,7 @@ function initialise() {
   // const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 
   // ortho 
-  globals.orthoSize = 3 ;
+  globals.orthoSize = 5 ;
   const aspect = window.innerWidth / window.innerHeight;
   const near = 0.1;
   const far = 1000;
@@ -53,7 +53,7 @@ function initialise() {
     globals.orthoSize / - 2, 
     near,
     far );
-  camera.position.set(3, 2.2, 10);
+  camera.position.set(3, 2.5, 10);
   // camera.lookAt(new THREE.Vector3(1, 2.5, 0));
 
   globals.canvas = canvas;

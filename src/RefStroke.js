@@ -7,7 +7,7 @@ import * as Utils from '../lib/gameEngine/utils/Utils.js';
 class RefStroke extends Component {
   constructor(gameObject, stroke) {
     super(gameObject);
-    // this.gameObject.transform.add(ku.getLineFromPnts( stroke.points ));
+    this.gameObject.transform.add(ku.getMeshLineFromPnts( stroke.points ));
     this.number = stroke.strokeNo;
   }
 

@@ -33,16 +33,6 @@ function getStrokesFromSvg(pathToSvg, pntsInStroke, scale = 0.05){
       strokeNo    : pathElem.getAttribute('id').split('-')[1].replace('s',''),
       points      : svgToThreeVec2Arr(ku.genPntsForVectorPaths(vectorPaths, pntsInStroke)),
     }
-
-    // drawing each bezier seperately
-    for(const vp of vectorPaths){
-      svgToThreeVec2Arr(ku.getPntsOnCubicBezier(vp, 10))
-      .forEach( pnt => Utils.addPointAsSphere(pnt, globals.scene, 'purple', 0.01));
-    }
-
-    // drawing complete path
-    rawStroke.points
-    .forEach( pnt => Utils.addPointAsSphere(pnt, globals.scene, 'blue', 0.03));
     strokes.push(rawStroke);
   }
   return strokes;
@@ -109,7 +99,7 @@ function getVectorPathsFromPathStr(pathStr){
                     cubeBez = 
                     {
                         type: "cubicBezier",
-                        p1 : new lastPnt.clone(),
+                        p1 : lastPnt.clone(),
                         p2 : p2,
                         p3 : p3,
                         p4 : p4,

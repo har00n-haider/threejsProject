@@ -26,7 +26,7 @@ function getMeshLineFromPnts( pnts ) {
         opacity: 1,
         resolution: new THREE.Vector2( window.innerWidth , window.innerHeight ),
         sizeAttenuation: false,
-        lineWidth: 10,
+        lineWidth: 20,
     });
     var mesh = new THREE.Mesh( g.geometry, material );
     return mesh;
@@ -55,7 +55,7 @@ function getPntsOnCubicBezier(cB, noOfPnts){
   return pnts;
 }
 
-function getLengthOfCubicBezier(cB, res = 0.01){
+function getLengthOfCubicBezier(cB, res = 0.1){
   let length = 0;
   let curPnt = cB.p1;
   for (let i = res; i <= 1; i+=res) {
