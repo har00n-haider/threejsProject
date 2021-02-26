@@ -11,7 +11,7 @@ class Stroke extends Component {
   }
 
   update = () => {
-    // this.updateLine(this.line);
+    this.updateLine(this.line);
   }
 
   destroy = () => {
@@ -73,7 +73,7 @@ class Stroke extends Component {
       if(line.started && !line.completed){
         line.completed = true;
         //TODO: remove this debug line
-        ku.addRefPntsToScene(ku.genRefPntsForLine(line), globals.scene);
+        ku.addRefPntsToScene(ku.genRefPntsForLine(line.posArr), globals.scene, 'yellow');
       }
     }
   }

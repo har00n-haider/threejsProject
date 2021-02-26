@@ -8,6 +8,7 @@ class RefStroke extends Component {
   constructor(gameObject, stroke) {
     super(gameObject);
     this.gameObject.transform.add(ku.getMeshLineFromPnts( stroke.points ));
+    ku.addRefPntsToScene(ku.genRefPntsForLine(stroke.points), globals.scene, 'blue');
     this.number = stroke.strokeNo;
   }
 

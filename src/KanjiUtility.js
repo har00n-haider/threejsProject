@@ -103,29 +103,40 @@ function genPntsForVectorPaths(vectorPaths, pntsInStroke){
   return pnts;
 }
 
-function addRefPntsToScene(refPnts, scene){
+function addRefPntsToScene(refPnts, scene, color){
   for (const pnt of refPnts) {
     Utils.addPointAsSphere(
       new THREE.Vector3(pnt.x, pnt.y, 0), 
-      scene);
+      scene, color, 0.1);
   }
 }
 
-function genRefPntsForLine(line){
-  const lnPnts = line.posArr;
-  if(lnPnts.length > 3){
+// PERF: need to only process 2D points here
+function genRefPntsForPnts(points){
+  if(points.length > 3){
+    // get total length of line
+    let totalDist = 0;
+    for (let i = 1; i < points.length; i++) {
+      totalDist += points[i].clone().sub(points[i-1]).length();
+    }
+
+    // first point
     let refPnts = [];
-    const halfDist = line.totalDist/2;
-    refPnts.push(lnPnts[0].clone());
+    refPnts.push(points[0].clone());
+    
+    // middle point
+    const halfDist = totalDist/2;
     let currDist = 0;
-    for (let i = 1; i < lnPnts.length; i++) {
-      currDist += lnPnts[i].clone().sub(lnPnts[i-1]).length();
+    for (let i = 1; i < points.length; i++) {
+      currDist += points[i].clone().sub(points[i-1]).length();
       if(currDist > halfDist){
-        refPnts.push(lnPnts[i]);
+        refPnts.push(points[i]);
         break;
       }
     }
-    refPnts.push(lnPnts[lnPnts.length - 1]);
+
+    // last point
+    refPnts.push(points[points.length - 1]);
     return refPnts;
   }
   return [];
@@ -137,7 +148,7 @@ export{
     getPntOnCubicBezier,
     getPntsOnCubicBezier,
     addRefPntsToScene,
-    genRefPntsForLine,
+    genRefPntsForPnts as genRefPntsForLine,
     getLengthOfCubicBezier,
     genPntsForVectorPaths
 }
