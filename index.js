@@ -42,9 +42,9 @@ function initialise() {
   // const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 
   // ortho 
-  globals.orthoSize = 10 ;
+  globals.orthoSize = 12;
   const aspect = window.innerWidth / window.innerHeight;
-  const near = 0.1;
+  const near = 0.01;
   const far = 1000;
   const camera = new THREE.OrthographicCamera( 
     globals.orthoSize * aspect / - 2, 
