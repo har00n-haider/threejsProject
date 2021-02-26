@@ -11,7 +11,7 @@ class Stroke extends Component {
   }
 
   update = () => {
-    this.updateLine(this.line);
+    // this.updateLine(this.line);
   }
 
   destroy = () => {

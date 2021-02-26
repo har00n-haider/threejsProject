@@ -1,27 +1,48 @@
 import * as THREE from '../lib/three.module.js';
 import * as ku from './KanjiUtility.js';
+import * as Utils from '../lib/gameEngine/utils/Utils.js';
+import globals from '../lib/gameEngine/Globals.js';
+
 //#region  public 
 
-function getStrokesFromSvg(pathToSvg, pntsInStroke){
+let svgInfo = {}
+
+/**
+ * Points are return in THREE coordinate system
+ * @param {*} pathToSvg 
+ * @param {*} pntsInStroke 
+ */
+function getStrokesFromSvg(pathToSvg, pntsInStroke, scale = 0.05){
   // get raw data from file
   var svgStr = readStringFromFileAtPath(pathToSvg);
   let parser = new DOMParser();
   let xmlDoc = parser.parseFromString(svgStr, "image/svg+xml");
-  const svgInfo = setSvgInfo(
+  setSvgInfo(
       parseInt(xmlDoc.getElementsByTagName("svg")[0].getAttribute('width')),
-      parseInt(xmlDoc.getElementsByTagName("svg")[0].getAttribute('height'))
+      parseInt(xmlDoc.getElementsByTagName("svg")[0].getAttribute('height')),
+      scale,
   );
   let pathElems = xmlDoc.getElementsByTagName("path");
   // get stroke from raw data
-  let strokes = [];
+  const strokes = [];
   for(const pathElem of pathElems){
     let pathStr = pathElem.getAttribute("d");
     const vectorPaths = getVectorPathsFromPathStr(pathStr);
     // stroke definition
     const rawStroke = {
-      strokeNo : pathElem.getAttribute('id').split('-')[1].replace('s',''),
-      points   : ku.genPntsForVectorPath(vectorPaths, pntsInStroke, svgInfo)
+      strokeNo    : pathElem.getAttribute('id').split('-')[1].replace('s',''),
+      points      : svgToThreeVec2Arr(ku.genPntsForVectorPaths(vectorPaths, pntsInStroke)),
     }
+
+    // drawing each bezier seperately
+    for(const vp of vectorPaths){
+      svgToThreeVec2Arr(ku.getPntsOnCubicBezier(vp, 10))
+      .forEach( pnt => Utils.addPointAsSphere(pnt, globals.scene, 'purple', 0.01));
+    }
+
+    // drawing complete path
+    rawStroke.points
+    .forEach( pnt => Utils.addPointAsSphere(pnt, globals.scene, 'blue', 0.03));
     strokes.push(rawStroke);
   }
   return strokes;
@@ -78,6 +99,9 @@ function getVectorPathsFromPathStr(pathStr){
                 const p3y = pullVal();
                 const p4x = pullVal();
                 const p4y = pullVal();
+                const p2  = new THREE.Vector2(p2x, p2y);
+                const p3  = new THREE.Vector2(p3x, p3y);
+                const p4  = new THREE.Vector2(p4x, p4y);
                 cleanStr();
                 let cubeBez = {}
                 if(commChar == 'C')
@@ -85,10 +109,10 @@ function getVectorPathsFromPathStr(pathStr){
                     cubeBez = 
                     {
                         type: "cubicBezier",
-                        p1 : new THREE.Vector2().add(lastPnt),
-                        p2 : new THREE.Vector2(p2x, p2y),
-                        p3 : new THREE.Vector2(p3x, p3y),
-                        p4 : new THREE.Vector2(p4x, p4y),
+                        p1 : new lastPnt.clone(),
+                        p2 : p2,
+                        p3 : p3,
+                        p4 : p4,
                     }
                 }
                 else
@@ -97,9 +121,9 @@ function getVectorPathsFromPathStr(pathStr){
                     {
                         type: "cubicBezier",
                         p1 : new THREE.Vector2().add(lastPnt),
-                        p2 : new THREE.Vector2(p2x, p2y).add(lastPnt),
-                        p3 : new THREE.Vector2(p3x, p3y).add(lastPnt),
-                        p4 : new THREE.Vector2(p4x, p4y).add(lastPnt),
+                        p2 : p2.clone().add(lastPnt),
+                        p3 : p3.clone().add(lastPnt),
+                        p4 : p4.clone().add(lastPnt),
                     }
                 }
                 lastPnt = cubeBez.p4;
@@ -135,18 +159,30 @@ function readStringFromFileAtPath(pathOfFileToReadFrom){
     return returnValue;
 }
 
-function setSvgInfo(width, height){
-    const svgInfo = {};
+function setSvgInfo(width, height, scale){
+    svgInfo = {};
     svgInfo.width  = width;
     svgInfo.height = height;
-    svgInfo.scale = 0.05;
+    svgInfo.scale = scale;
     svgInfo.scaledWidth  = svgInfo.width * svgInfo.scale;
     svgInfo.scaledHeight = svgInfo.height * svgInfo.scale;
-    return svgInfo;
+    Object.freeze(svgInfo);
+}
+
+function svgToThreeVec2(svgVec){
+  let scaledVec = new THREE.Vector2(svgVec.x, svgVec.y - svgInfo.height).multiplyScalar(svgInfo.scale);
+  return new THREE.Vector2(scaledVec.x, -scaledVec.y);
+}
+
+function svgToThreeVec2Arr(svgVecArr){
+  const convPoints = [];
+  for(const pnt of svgVecArr){
+    convPoints.push(svgToThreeVec2(pnt));
+  }
+  return convPoints;
 }
 
 //#endregion
-
 
 export {
     getStrokesFromSvg as loadSvg,

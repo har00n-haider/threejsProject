@@ -47,7 +47,15 @@ function getPntOnCubicBezier(t, cB){
     return r;
 }
 
-function getLengthOfCubicBezier(cB, res = 0.1){
+function getPntsOnCubicBezier(cB, noOfPnts){
+  const pnts = [];
+  for (let i = 0; i < noOfPnts; i++) {
+    pnts.push(getPntOnCubicBezier(i/noOfPnts, cB));
+  }
+  return pnts;
+}
+
+function getLengthOfCubicBezier(cB, res = 0.01){
   let length = 0;
   let curPnt = cB.p1;
   for (let i = res; i <= 1; i+=res) {
@@ -58,49 +66,39 @@ function getLengthOfCubicBezier(cB, res = 0.1){
   return length;
 }
 
-function vec2SvgToThree(svgVec, svgInfo){
-    let scaledVec = new THREE.Vector2(svgVec.x, svgVec.y - svgInfo.height).multiplyScalar(svgInfo.scale);
-    return new THREE.Vector2(scaledVec.x, -scaledVec.y);
-}
-
-function genPntsForVectorPath(vectorPaths, pntsInStroke, svgInfo){
-  // get the distance breakdown
-  const vecLenInfo = {
-    pathLengths : Array(vectorPaths.length).fill(0),
-    totLength   : 0
+function genPntsForVectorPaths(vectorPaths, pntsInStroke){
+  // get the bezier offsets
+  const pthInfo = {
+    lengths   : Array(vectorPaths.length).fill(0),
+    offsets   : Array(vectorPaths.length).fill(0),
+    totLength : 0
   }
+  const lstIdx = vectorPaths.length - 1;
   for (let i = 0; i < vectorPaths.length; i++) {
     switch(vectorPaths[i].type){
       case "cubicBezier":
-        vecLenInfo.pathLengths[i] = getLengthOfCubicBezier(vectorPaths[i]);
-        vecLenInfo.totLength += vecLenInfo.pathLengths[i];
+        pthInfo.lengths[i] = getLengthOfCubicBezier(vectorPaths[i]);
+        pthInfo.totLength += pthInfo.lengths[i];
+        if (i > 0){
+          pthInfo.offsets[i] = pthInfo.lengths[i-1] + pthInfo.offsets[i-1];
+        }
         break;
     }
   }
   // get the points across the whole vector path
   let pnts = [];
-  let vecPthIdx = 0;
-  let vecPathOffset = 0;
+  let pthIdx = 0;
   for (let i = 0; i < pntsInStroke; i++) {
-    let tPath = i/pntsInStroke;
-    let tPathScaled = tPath * vecLenInfo.totLength;
-    if(tPathScaled > vecLenInfo.pathLengths[vecPthIdx]){
-      const nxtVecPthIdx = vecPthIdx + 1;
-      if(nxtVecPthIdx !== vectorPaths.length){
-        // switch to the next vec path element (order below is important)
-        vecPathOffset += vecLenInfo.pathLengths[vecPthIdx];
-        vecPthIdx = nxtVecPthIdx;
-      }
+    let tPth = i/pntsInStroke;
+    let pPthScaled = tPth * pthInfo.totLength;
+    const nxtPthIdx = pthIdx + 1;
+    if(nxtPthIdx !== vectorPaths.length && 
+       pPthScaled > pthInfo.offsets[nxtPthIdx]){
+      pthIdx = nxtPthIdx;
     }
-    let tVecPath = (tPathScaled - vecPathOffset) / vecLenInfo.pathLengths[vecPthIdx];
+    let tVecPath = (pPthScaled - pthInfo.offsets[pthIdx]) / pthInfo.lengths[pthIdx];
     tVecPath = Utils.clamp(tVecPath, 0, 1);
-    if(vectorPaths[vecPthIdx] == undefined){
-      var x = 1;
-    }
-    pnts.push(vec2SvgToThree(
-      getPntOnCubicBezier(tVecPath, vectorPaths[vecPthIdx]),
-      svgInfo
-    ));
+    pnts.push(getPntOnCubicBezier(tVecPath, vectorPaths[pthIdx]));
   }
   return pnts;
 }
@@ -137,9 +135,9 @@ export{
     getMeshLineFromPnts,
     getLineFromPnts,
     getPntOnCubicBezier,
-    vec2SvgToThree,
+    getPntsOnCubicBezier,
     addRefPntsToScene,
     genRefPntsForLine,
     getLengthOfCubicBezier,
-    genPntsForVectorPath
+    genPntsForVectorPaths
 }
