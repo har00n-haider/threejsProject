@@ -7,6 +7,7 @@ class Stroke extends Component {
   constructor(gameObject) {
     super(gameObject);
     this.line = this.getLine();
+    this.refPoints = [];
     this.gameObject.transform.add(this.line.object3d);
   }
 
@@ -21,7 +22,7 @@ class Stroke extends Component {
     // Line definition
     const line = {
       object3d    : {},
-      posArr  : [],
+      posArr      : [],
       maxPoints   : 500,
       drawCount   : 0,
       posIdx      : 0,
@@ -73,7 +74,8 @@ class Stroke extends Component {
       if(line.started && !line.completed){
         line.completed = true;
         //TODO: remove this debug line
-        ku.addRefPntsToScene(ku.genRefPntsForLine(line.posArr), globals.scene, 'yellow');
+        this.refPoints = ku.genRefPntsForLine(line.posArr);
+        ku.addRefPntsToScene(this.refPoints, globals.scene, 'yellow');
       }
     }
   }

@@ -116,7 +116,9 @@ function addRefPntsToScene(refPnts, scene, color){
 }
 
 // PERF: need to only process 2D points here
-function genRefPntsForPnts(points){
+function genRefPntsForPnts(inpPoints){
+  const points = [];
+  inpPoints.forEach( pnt => points.push(new THREE.Vector2(pnt.x , pnt.y)));
   if(points.length > 3){
     // get total length of line
     let totalDist = 0;

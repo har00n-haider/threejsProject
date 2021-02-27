@@ -7,9 +7,18 @@ import * as Utils from '../lib/gameEngine/utils/Utils.js';
 class RefStroke extends Component {
   constructor(gameObject, stroke) {
     super(gameObject);
-    this.gameObject.transform.add(ku.getMeshLineFromPnts( stroke.points ));
-    ku.addRefPntsToScene(ku.genRefPntsForLine(stroke.points), globals.scene, 'blue');
+    this.line = ku.getMeshLineFromPnts( stroke.points );
+    this.gameObject.transform.add(this.line);
+    this.refPoints = ku.genRefPntsForLine(stroke.points);
     this.number = stroke.strokeNo;
+    this.passes = false;
+    // TODO: remove this debug line
+    ku.addRefPntsToScene(this.refPoints, globals.scene, 'blue');
+  }
+
+  updateState = (passed) => {
+    this.passed = passed;
+    this.line.material.color.setHex(0x008000);
   }
 
   update = () => {
