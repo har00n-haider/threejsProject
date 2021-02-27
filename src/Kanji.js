@@ -29,15 +29,15 @@ class Kanji extends Component {
     for(const stroke of strokes){
       this.genRefStroke(stroke);
     }
+    this.curRefStroke = this.refStrokes.shift();
   }
-
+  
   genRefStroke = (stroke) => {
     const strokeGo = globals.gameObjectManager.createGameObject(
       this.gameObject.transform,
       'refStrokeGo'
-    );
-    this.curRefStroke = strokeGo.addComponent(RefStroke, stroke);;
-    this.refStrokes.push(this.curRefStroke);    
+      );
+    this.refStrokes.push(strokeGo.addComponent(RefStroke, stroke));    
   }
 
   genInpStroke = () => {
@@ -65,7 +65,7 @@ class Kanji extends Component {
     this.curInpStroke.refPoints.length;
     if(canCompare){
       let strokesMatch = true; 
-      const passLen = 0.3;
+      const passLen = 0.5;
       for (let i = 0; i < this.curRefStroke.refPoints.length; i++) {
         const iRefPnt = this.curRefStroke.refPoints[i];
         const rRefPnt = this.curInpStroke.refPoints[i];
