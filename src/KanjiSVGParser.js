@@ -57,7 +57,7 @@ function getVectorPathsFromPathStr(pathStr){
         return;
     }
     function pullCommand(){
-        const comRegex = /[McC]/;
+        const comRegex = /[^ 0-9,.-]/;
         const match = pathStr.match(comRegex);
         if(match != null){
             pathStr = pathStr.replace(comRegex, '');
@@ -82,19 +82,39 @@ function getVectorPathsFromPathStr(pathStr){
                 cleanStr();
                 break;
             case 'C':
-            case 'c':
-                const p2x = pullVal();
-                const p2y = pullVal();
+            case 'c': 
+            case 'S':
+            case 's':
+                // cubic beziers 
+                let p2 = null;
+                if(commChar == 'S' || commChar == 's'){
+                  // use reflected control point from previous cB
+                  if(lastCbCtrlPnt == undefined){
+                    throw new Error('last cubic bezier control point not set');
+                  }
+                  const rflVec = (new THREE.Vector2()).subVectors(lastPnt, lastCbCtrlPnt);
+                  if(commChar == 'S'){
+                    p2 = rflVec.clone().add(lastPnt);
+                  }
+                  else{
+                    p2  = rflVec;
+                  }
+                }
+                else{
+                  // standard method to get control point
+                  const p2x = pullVal();
+                  const p2y = pullVal();
+                  p2  = new THREE.Vector2(p2x, p2y);
+                }
                 const p3x = pullVal();
                 const p3y = pullVal();
                 const p4x = pullVal();
                 const p4y = pullVal();
-                const p2  = new THREE.Vector2(p2x, p2y);
                 const p3  = new THREE.Vector2(p3x, p3y);
                 const p4  = new THREE.Vector2(p4x, p4y);
                 cleanStr();
                 let cubeBez = {}
-                if(commChar == 'C')
+                if(commChar == 'C' || commChar == 'S')
                 {
                     cubeBez = 
                     {
@@ -116,16 +136,17 @@ function getVectorPathsFromPathStr(pathStr){
                         p4 : p4.clone().add(lastPnt),
                     }
                 }
-                lastPnt = cubeBez.p4;
+                lastCbCtrlPnt = cubeBez.p3.clone();
+                lastPnt = cubeBez.p4.clone();
                 vectorPaths.push(cubeBez);
                 break;
             default:
-              console.warn( 'unknown SVG command char: ' + commChar);
-              break;
+              throw new Error('unknown SVG command char: ' + commChar);
         }
     }
     const vectorPaths = [];
     let lastPnt = new THREE.Vector2();
+    let lastCbCtrlPnt = undefined;
     let lastComChar = '';
     while(pathStr.length > 0){
         let commChar = pullCommand();

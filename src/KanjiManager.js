@@ -8,7 +8,7 @@ import Kanji from "./Kanji.js";
 class KanjiManager extends Component {
     constructor(gameObject) {
       super(gameObject);
-      this.currKanji = this.genKanji('./assets/0f9af.svg');
+      this.currKanji = this.genKanji('./assets/04ff5.svg');
     }
   
     genKanji = (kanjiPath) => {
