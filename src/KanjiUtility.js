@@ -22,8 +22,12 @@ function getMeshLineFromPnts( pnts ) {
     g.setGeometry( line  );
     var material = new MeshLineMaterial( {
         useMap: false,
-        color: Utils.getRandomColor(),
-        opacity: 1,
+        color: 'grey',
+        // color: Utils.getRandomColor(),
+        depthTest : false, 
+        transparent : true, 
+        blending : 1,
+        opacity: 0.5,
         resolution: new THREE.Vector2( window.innerWidth , window.innerHeight ),
         sizeAttenuation: false,
         lineWidth: 20,
