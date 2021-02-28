@@ -16,6 +16,8 @@ html, body {
   margin: 0;
   padding: 0;
   display: block;
+  /*required to stop the browser from cancel touch events*/
+  touch-action: none ;
 }
 #debugWrapper {
   font-size: 15px;

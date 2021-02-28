@@ -55,11 +55,12 @@ class Kanji extends Component {
   update = () => {
     if(this.curInpStroke.line != undefined){
       if(this.curInpStroke.line.completed){
-        this.compareStrokes()
+        this.compareStrokes();
         this.curInpStroke.destroy();
         // kanji is completed
         if(this.curRefStroke == undefined){
           this.completedEvent.fire();
+          return;
         }
         this.genInpStroke();
       }

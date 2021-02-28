@@ -45,7 +45,9 @@ class KanjiManager extends Component {
     }
 
     handleKanjiCompleted = () => {
+      this.currKanji.completedEvent.deRegCb(this.handleKanjiCompleted);
       this.currKanji.destroy();
+      globals.gameObjectManager.removeGameObject(this.currKanji.gameObject);
       this.currKanji = this.genKanji(this.kanjiPathList.pop());
     }
   
