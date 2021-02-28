@@ -6,7 +6,7 @@ import Debugger from './lib/gameEngine/utils/Debugger.js';
 import InputManager from './lib/gameEngine/utils/InputManager.js';
 import globals from './lib/gameEngine/Globals.js';
 import InfiniteGridHelper from './lib/InfiniteGridHelper.js';
-import {GUI} from './lib/dat.gui.module.js';
+// import {GUI} from './lib/dat.gui.module.js';
 // GameEngine stuff
 import GameObjectManager from './lib/gameEngine/ecs/GameObjectManager.js';
 import AudioManager from './lib/gameEngine/utils/AudioManager.js';
