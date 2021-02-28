@@ -20,6 +20,7 @@ import KanjiManager from './src/KanjiManager.js';
 function initialise() {
   // canvas setup
   const canvas = document.querySelector('canvas');
+  globals.canvas = canvas;
   globals.renderer = new THREE.WebGLRenderer({
     canvas,
     antialias: true,
@@ -32,19 +33,23 @@ function initialise() {
     onCanvasResize();
   }, false);
 
-  // camera
+  
+  // scene
+  const scene = new THREE.Scene();
+  globals.scene = scene;
+  scene.background = new THREE.Color('#c4dbff');
 
+  // camera
   // perspective
   // const fov = 60;
   // const aspect = window.innerWidth / window.innerHeight;
   // const near = 0.1;
   // const far = 1000;
   // const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-
   // ortho 
   globals.orthoSize = 7;
   const aspect = window.innerWidth / window.innerHeight;
-  const near = 0.01;
+  const near = 0.001;
   const far = 1000;
   const camera = new THREE.OrthographicCamera( 
     globals.orthoSize * aspect / - 2, 
@@ -53,17 +58,11 @@ function initialise() {
     globals.orthoSize / - 2, 
     near,
     far );
-  const camVec = new THREE.Vector3(3, 2.5, 30);
+  const camVec = new THREE.Vector3(1, 1, 1);
   camera.position.set(camVec.x, camVec.y, camVec.z);
-  camera.lookAt(new THREE.Vector3(camVec.x, camVec.y, 0));
-
-  globals.canvas = canvas;
+  camera.lookAt(new THREE.Vector3(0, 0, 0));
+  globals.scene.add(camera);
   globals.mainCamera = camera;
-
-  // scene
-  const scene = new THREE.Scene();
-  globals.scene = scene;
-  scene.background = new THREE.Color('#c4dbff');
 
   // lights
   function addLight(...pos) {
