@@ -8,7 +8,23 @@ import Kanji from "./Kanji.js";
 class KanjiManager extends Component {
     constructor(gameObject) {
       super(gameObject);
-      this.currKanji = this.genKanji('./assets/04ff5.svg');
+      this.kanjiPathList = [];
+      this.kanjiPathList.push('./assets/05674.svg');
+      this.kanjiPathList.push('./assets/058e5.svg');
+      this.kanjiPathList.push('./assets/05a62.svg');
+      this.kanjiPathList.push('./assets/0665e.svg');
+      this.kanjiPathList.push('./assets/06751.svg');
+      this.kanjiPathList.push('./assets/06a44.svg');
+      this.kanjiPathList.push('./assets/06f13.svg');
+      this.kanjiPathList.push('./assets/072d0.svg');
+      this.kanjiPathList.push('./assets/07725.svg');
+      this.kanjiPathList.push('./assets/07de0.svg');
+      this.kanjiPathList.push('./assets/08757.svg');
+      this.kanjiPathList.push('./assets/0916a.svg');
+      this.kanjiPathList.push('./assets/095d8.svg');
+      this.kanjiPathList.push('./assets/09955.svg');
+      this.kanjiPathList.push('./assets/09b45.svg');
+      this.currKanji = this.genKanji(this.kanjiPathList.shift());
     }
   
     genKanji = (kanjiPath) => {
@@ -16,8 +32,7 @@ class KanjiManager extends Component {
             this.gameObject.transform,
             'KanjiGo',
         );
-        KanjiGo.addComponent(Kanji, kanjiPath);
-        return KanjiGo;
+        return KanjiGo.addComponent(Kanji, kanjiPath);;
     }  
 
     update = () => {
