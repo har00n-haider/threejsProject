@@ -24,7 +24,8 @@ class KanjiManager extends Component {
       this.kanjiPathList.push('./assets/095d8.svg');
       this.kanjiPathList.push('./assets/09955.svg');
       this.kanjiPathList.push('./assets/09b45.svg');
-      this.currKanji = this.genKanji(this.kanjiPathList.shift());
+      this.kanjiPathList.push('./assets/05b51.svg');
+      this.currKanji = this.genKanji(this.kanjiPathList.pop());
     }
   
     genKanji = (kanjiPath) => {
@@ -32,14 +33,20 @@ class KanjiManager extends Component {
             this.gameObject.transform,
             'KanjiGo',
         );
-        return KanjiGo.addComponent(Kanji, kanjiPath);;
+        const kanji = KanjiGo.addComponent(Kanji, kanjiPath)
+        kanji.completedEvent.regCb(this.handleKanjiCompleted);
+        return kanji;
     }  
 
     update = () => {
-
     }
   
     destroy = () => {
+    }
+
+    handleKanjiCompleted = () => {
+      this.currKanji.destroy();
+      this.currKanji = this.genKanji(this.kanjiPathList.pop());
     }
   
 }

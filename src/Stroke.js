@@ -2,12 +2,15 @@ import Component from "../lib/gameEngine/ecs/Component.js";
 import * as THREE from '../lib/three.module.js';
 import globals from "../lib/gameEngine/Globals.js";
 import * as ku from './KanjiUtility.js';
+import ResourceTracker from '../lib/gameEngine/utils/ResourceTracker.js';
 
 class Stroke extends Component {
   constructor(gameObject) {
     super(gameObject);
     this.line = this.getLine();
     this.refPoints = [];
+    this.resTracker = new ResourceTracker();
+    this.resTracker.track(this.line.object3d);
     this.gameObject.transform.add(this.line.object3d);
   }
 
@@ -16,6 +19,7 @@ class Stroke extends Component {
   }
 
   destroy = () => {
+    this.resTracker.dispose();
   }
 
   getLine = () => {
@@ -73,9 +77,7 @@ class Stroke extends Component {
     else{
       if(line.started && !line.completed){
         line.completed = true;
-        //TODO: remove this debug line
         this.refPoints = ku.genRefPntsForLine(line.posArr);
-        ku.addRefPntsToScene(this.refPoints, globals.scene, 'yellow');
       }
     }
   }
