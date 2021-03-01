@@ -38,7 +38,7 @@ class Kanji extends Component {
   genRefStroke = (stroke) => {
     const strokeGo = globals.gameObjectManager.createGameObject(
       this.gameObject.transform,
-      'refStrokeGo'
+      'RefStroke' + stroke.number
       );
     this.refStrokes.push(strokeGo.addComponent(RefStroke, stroke));    
   }
@@ -46,7 +46,7 @@ class Kanji extends Component {
   genInpStroke = () => {
     const strokeGo = globals.gameObjectManager.createGameObject(
       this.gameObject.transform,
-      'inpStrokeGo'
+      'InpStroke'
     );
     this.curInpStroke = strokeGo.addComponent(Stroke);
     this.inpStrokes.push(this.curInpStroke);

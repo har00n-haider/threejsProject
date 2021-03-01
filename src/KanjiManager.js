@@ -31,7 +31,7 @@ class KanjiManager extends Component {
     genKanji = (kanjiPath) => {
         const KanjiGo = globals.gameObjectManager.createGameObject(
             this.gameObject.transform,
-            'KanjiGo',
+            'Kanji',
         );
         const kanji = KanjiGo.addComponent(Kanji, kanjiPath)
         kanji.completedEvent.regCb(this.handleKanjiCompleted);

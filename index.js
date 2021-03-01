@@ -143,6 +143,7 @@ function setupGameObjects() {
 
   // grid
   const grid = new InfiniteGridHelper(0.5, 100, new THREE.Color('white'), 100);
+  grid.name = 'EditorGrid';
   globals.scene.add(grid);
 
   // default orbit controls
@@ -153,6 +154,7 @@ function setupGameObjects() {
 
   // debug axes
   const axes = new THREE.AxesHelper(5);
+  axes.name = 'EditorAxes';
   globals.scene.add(axes);
 
   // initialise game objects
@@ -163,7 +165,7 @@ function setupGameObjects() {
   // kanji game specific stuff
   const KanjiManagerGo = globals.gameObjectManager.createGameObject(
     globals.scene,
-    'KanjiManagerGo',
+    'KanjiManager',
   );
   KanjiManagerGo.addComponent(KanjiManager);
 }

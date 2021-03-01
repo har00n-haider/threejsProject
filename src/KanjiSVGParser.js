@@ -30,7 +30,7 @@ function getStrokesFromSvg(pathToSvg, pntsInStroke, scale = 0.05){
     const vectorPaths = getVectorPathsFromPathStr(pathStr);
     // stroke definition
     const rawStroke = {
-      strokeNo    : pathElem.getAttribute('id').split('-')[1].replace('s',''),
+      number      : pathElem.getAttribute('id').split('-')[1].replace('s',''),
       points      : svgToThreeVec2Arr(ku.genPntsForVectorPaths(vectorPaths, pntsInStroke)),
     }
     strokes.push(rawStroke);
