@@ -8,9 +8,10 @@ import globals from '../lib/gameEngine/Globals.js';
 let svgInfo = {}
 
 /**
- * Points are return in THREE coordinate system
+ * Points are return in THREE coordinate system. Kanji is centered on
+ * the origin.
  * @param {*} pathToSvg 
- * @param {*} pntsInStroke 
+ * @param {*} pntsInStroke. The number of points per stroke to use
  */
 function getStrokesFromSvg(pathToSvg, pntsInStroke, scale = 0.05){
   // get raw data from file
@@ -174,6 +175,8 @@ function setSvgInfo(width, height, scale){
     svgInfo = {};
     svgInfo.width  = width;
     svgInfo.height = height;
+    svgInfo.widthOffset  = width/2;
+    svgInfo.heightOffset = height/2;
     svgInfo.scale = scale;
     svgInfo.scaledWidth  = svgInfo.width * svgInfo.scale;
     svgInfo.scaledHeight = svgInfo.height * svgInfo.scale;
@@ -181,7 +184,7 @@ function setSvgInfo(width, height, scale){
 }
 
 function svgToThreeVec2(svgVec){
-  let scaledVec = new THREE.Vector2(svgVec.x, svgVec.y - svgInfo.height).multiplyScalar(svgInfo.scale);
+  let scaledVec = new THREE.Vector2(svgVec.x - svgInfo.widthOffset, svgVec.y - svgInfo.heightOffset).multiplyScalar(svgInfo.scale);
   return new THREE.Vector2(scaledVec.x, -scaledVec.y);
 }
 
