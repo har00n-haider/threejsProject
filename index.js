@@ -6,7 +6,7 @@ import Debugger from './lib/gameEngine/utils/Debugger.js';
 import InputManager from './lib/gameEngine/utils/InputManager.js';
 import globals from './lib/gameEngine/Globals.js';
 import InfiniteGridHelper from './lib/InfiniteGridHelper.js';
-// import {GUI} from './lib/dat.gui.module.js';
+import {GUI} from './lib/dat.gui.module.js';
 // GameEngine stuff
 import GameObjectManager from './lib/gameEngine/ecs/GameObjectManager.js';
 import AudioManager from './lib/gameEngine/utils/AudioManager.js';
@@ -47,7 +47,7 @@ function initialise() {
   // const far = 1000;
   // const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
   // ortho 
-  globals.orthoSize = 7;
+  globals.orthoSize = 11;
   const aspect = window.innerWidth / window.innerHeight;
   const near = 0.001;
   const far = 1000;
@@ -58,7 +58,7 @@ function initialise() {
     globals.orthoSize / - 2, 
     near,
     far );
-  const camVec = new THREE.Vector3(1, 1, 1);
+  const camVec = new THREE.Vector3(3, 3, 3);
   camera.position.set(camVec.x, camVec.y, camVec.z);
   camera.lookAt(new THREE.Vector3(0, 0, 0));
   globals.scene.add(camera);
@@ -89,17 +89,6 @@ function initialise() {
   addLight(5, 5, 2);
   addLight(-5, 5, 5);
 
-  // sky box
-  // const loader = new THREE.CubeTextureLoader();
-  // const texture = loader.load([
-  //     './resources/posx.jpg',
-  //     './resources/negx.jpg',
-  //     './resources/posy.jpg',
-  //     './resources/negy.jpg',
-  //     './resources/posz.jpg',
-  //     './resources/negz.jpg',
-  // ]);
-  // globals.scene.background = texture;
 }
 
 function updateOrthCamera(camera){
@@ -121,6 +110,14 @@ function onCanvasResize() {
   globals.renderer.setSize(window.innerWidth, window.innerHeight, false);
 }
 
+function updateOptions(){
+
+  globals.orbitControls.enableZoom   = globals.enableOrbitControls;
+  globals.orbitControls.enableRotate = globals.enableOrbitControls;
+  globals.orbitControls.enablePan    = globals.enableOrbitControls;
+
+}
+
 // Main render loop
 function render(curTimeMilliSec) {
   // timing
@@ -131,6 +128,8 @@ function render(curTimeMilliSec) {
   globals.deltaTimeMillSec = curTimeMilliSec - globals.lastTimeMilliSec;
   globals.lastTimeMilliSec = curTimeMilliSec;
 
+
+  updateOptions();
   globals.debugger.update();
   globals.gameObjectManager.update();
   globals.renderer.render(globals.scene, globals.mainCamera);
@@ -147,10 +146,10 @@ function setupGameObjects() {
   globals.scene.add(grid);
 
   // default orbit controls
-  // globals.orbitControls = new OrbitControls(
-  //   globals.mainCamera,
-  //   globals.renderer.domElement,
-  // );
+  globals.orbitControls = new OrbitControls(
+    globals.mainCamera,
+    globals.renderer.domElement,
+  );
 
   // debug axes
   const axes = new THREE.AxesHelper(5);
@@ -162,6 +161,10 @@ function setupGameObjects() {
   globals.gameObjectManager = new GameObjectManager();
   globals.debugger = new Debugger(globals, document.getElementById('debugWrapper'));
 
+  // dat gui
+  const gui = new GUI({width: 250});
+  gui.add( globals, 'enableOrbitControls').name('enable orbit controls');
+
   // kanji game specific stuff
   const KanjiManagerGo = globals.gameObjectManager.createGameObject(
     globals.scene,
@@ -170,10 +173,6 @@ function setupGameObjects() {
   KanjiManagerGo.addComponent(KanjiManager);
 }
 
-function setupDatGUI(){
-  const gui = new GUI();
-  gui.add(globals, 'shit', 0, 0.5).name('something');
-}
 
 //#endregion 
 
