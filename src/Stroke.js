@@ -15,7 +15,9 @@ class Stroke extends Component {
   }
 
   update = () => {
-    this.updateLine(this.line);
+    if(globals.gameOptions.enableInputStrokes){
+      this.updateLine(this.line);
+    }
   }
 
   destroy = () => {

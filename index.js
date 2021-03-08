@@ -60,7 +60,7 @@ function initialise() {
     far );
   const camVec = new THREE.Vector3(3, 3, 3);
   camera.position.set(camVec.x, camVec.y, camVec.z);
-  camera.lookAt(new THREE.Vector3(0, 0, 0));
+  camera.lookAt(new THREE.Vector3(camVec.x, camVec.y, 0));
   globals.scene.add(camera);
   globals.mainCamera = camera;
 
@@ -111,7 +111,6 @@ function onCanvasResize() {
 }
 
 function updateOptions(){
-
   globals.orbitControls.enableZoom   = globals.enableOrbitControls;
   globals.orbitControls.enableRotate = globals.enableOrbitControls;
   globals.orbitControls.enablePan    = globals.enableOrbitControls;
@@ -164,6 +163,7 @@ function setupGameObjects() {
   // dat gui
   const gui = new GUI({width: 250});
   gui.add( globals, 'enableOrbitControls').name('enable orbit controls');
+  gui.add( globals.gameOptions, 'enableInputStrokes').name('enable input');
 
   // kanji game specific stuff
   const KanjiManagerGo = globals.gameObjectManager.createGameObject(
@@ -172,7 +172,6 @@ function setupGameObjects() {
   );
   KanjiManagerGo.addComponent(KanjiManager);
 }
-
 
 //#endregion 
 
