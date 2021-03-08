@@ -47,9 +47,9 @@ function initialise() {
   // const far = 1000;
   // const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
   // ortho 
-  globals.orthoSize = 11;
+  globals.orthoSize = 7;
   const aspect = window.innerWidth / window.innerHeight;
-  const near = 0.001;
+  const near = 0.01;
   const far = 1000;
   const camera = new THREE.OrthographicCamera( 
     globals.orthoSize * aspect / - 2, 
@@ -58,7 +58,7 @@ function initialise() {
     globals.orthoSize / - 2, 
     near,
     far );
-  const camVec = new THREE.Vector3(3, 3, 3);
+  const camVec = new THREE.Vector3(17, 15, 23);
   camera.position.set(camVec.x, camVec.y, camVec.z);
   camera.lookAt(new THREE.Vector3(camVec.x, camVec.y, 0));
   globals.scene.add(camera);
