@@ -40,8 +40,8 @@ function initialise() {
 
   // scene
   const scene = new THREE.Scene();
+  scene.background = new THREE.Color(globals.options.sceneBg);
   globals.scene = scene;
-  scene.background = new THREE.Color('#faa941');
 
   // lights
   function addLight(...pos) {
@@ -132,6 +132,8 @@ function updateOptions(){
       globals.orbitControls.object = globals.gameCamera;
       break;
   }
+
+  globals.scene.background = new THREE.Color(globals.options.sceneBg);
 }
 
 // Main render loop
@@ -162,10 +164,12 @@ function setupGameObjects() {
   globals.scene.add(grid);
 
   // default orbit controls
-  globals.orbitControls = new OrbitControls(
-    globals.mainCamera,
-    globals.renderer.domElement,
-  );
+  if(globals.options.useOrbitControls){
+    globals.orbitControls = new OrbitControls(
+      globals.mainCamera,
+      globals.renderer.domElement,
+    );
+  }
 
   // debug axes
   const axes = new THREE.AxesHelper(5);
@@ -182,6 +186,7 @@ function setupGameObjects() {
   gui.add( globals.options, 'enableOrbitControls').name('enable orbit controls');
   gui.add( globals.gameOptions, 'enableInputStrokes').name('enable input');
   gui.add( globals.options, 'activeCamera', [ 'editor', 'game' ] );
+  gui.addColor( globals.options, 'sceneBg');
 
   // kanji game specific stuff
   const KanjiManagerGo = globals.gameObjectManager.createGameObject(
