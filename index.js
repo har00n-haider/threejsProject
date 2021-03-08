@@ -88,7 +88,7 @@ function getPerspectiveCamera(camPos = new THREE.Vector3(1, 1, 1)){
 }
 
 function getOrthCamera(camPos = new THREE.Vector3(10, 10, 10)){
-  globals.orthoSize = 7;
+  globals.orthoSize = 10;
   const aspect = window.innerWidth / window.innerHeight;
   const near = 0.1;
   const far = 1000;
@@ -129,6 +129,8 @@ function setupGui(){
   gui.add( globals.options, 'activeCamera', [ 'editor', 'game' ] );
   gui.addColor( globals.options, 'sceneBg');
   gui.add( globals.options, 'enableGameCameraHelper');
+  gui.add( globals.options, 'debugStats');
+  gui.close();
 }
 
 function updateOptions(){
@@ -151,6 +153,14 @@ function updateOptions(){
   globals.gameCameraHelper.visible = globals.options.enableGameCameraHelper;
 
   globals.scene.background = new THREE.Color(globals.options.sceneBg);
+
+  if(globals.options.debugStats){
+    document.getElementById("debugWrapper").style.visibility = "visible";
+  }
+  else{
+    document.getElementById("debugWrapper").style.visibility = "hidden";
+  }
+
 }
 
 // Main render loop
