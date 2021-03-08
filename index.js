@@ -31,38 +31,17 @@ function initialise() {
   globals.renderer.setSize(window.innerWidth, window.innerHeight, true);
   window.addEventListener('resize', () => {
     onCanvasResize();
-  }, false);
+  }, false)
 
-  
+  // cameras
+  globals.gameCamera = getOrthCamera();
+  globals.editorCamera = getPerspectiveCamera();
+  globals.mainCamera = globals.gameCamera;
+
   // scene
   const scene = new THREE.Scene();
   globals.scene = scene;
-  scene.background = new THREE.Color('#c4dbff');
-
-  // camera
-  // perspective
-  // const fov = 60;
-  // const aspect = window.innerWidth / window.innerHeight;
-  // const near = 0.1;
-  // const far = 1000;
-  // const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-  // ortho 
-  globals.orthoSize = 7;
-  const aspect = window.innerWidth / window.innerHeight;
-  const near = 0.01;
-  const far = 1000;
-  const camera = new THREE.OrthographicCamera( 
-    globals.orthoSize * aspect / - 2, 
-    globals.orthoSize * aspect / 2, 
-    globals.orthoSize / 2, 
-    globals.orthoSize / - 2, 
-    near,
-    far );
-  const camVec = new THREE.Vector3(17, 15, 23);
-  camera.position.set(camVec.x, camVec.y, camVec.z);
-  camera.lookAt(new THREE.Vector3(camVec.x, camVec.y, 0));
-  globals.scene.add(camera);
-  globals.mainCamera = camera;
+  scene.background = new THREE.Color('#faa941');
 
   // lights
   function addLight(...pos) {
@@ -91,6 +70,32 @@ function initialise() {
 
 }
 
+function getPerspectiveCamera(camPos = new THREE.Vector3(1, 1, 1)){
+  const fov = 60;
+  const aspect = window.innerWidth / window.innerHeight;
+  const near = 0.1;
+  const far = 1000;
+  const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+  camera.position.set(camPos.x, camPos.y, camPos.z);
+  return camera; 
+}
+
+function getOrthCamera(camPos = new THREE.Vector3(10, 10, 10)){
+  globals.orthoSize = 7;
+  const aspect = window.innerWidth / window.innerHeight;
+  const near = 0.01;
+  const far = 1000;
+  const camera = new THREE.OrthographicCamera( 
+    globals.orthoSize * aspect / - 2, 
+    globals.orthoSize * aspect / 2, 
+    globals.orthoSize / 2, 
+    globals.orthoSize / - 2, 
+    near,
+    far );
+  camera.position.set(camPos.x, camPos.y, camPos.z);
+  return camera;
+}
+
 function updateOrthCamera(camera){
   const aspect = window.innerWidth / window.innerHeight;
   camera.left   = globals.orthoSize * aspect / - 2; 
@@ -103,7 +108,7 @@ function onCanvasResize() {
   if(globals.mainCamera.isOrthographicCamera){
     updateOrthCamera(globals.mainCamera);
   }
-  else{
+  if(globals.mainCamera.isPerspectiveCamera){
     globals.mainCamera.aspect = window.innerWidth / window.innerHeight;
   }
   globals.mainCamera.updateProjectionMatrix();
@@ -111,10 +116,22 @@ function onCanvasResize() {
 }
 
 function updateOptions(){
-  globals.orbitControls.enableZoom   = globals.enableOrbitControls;
-  globals.orbitControls.enableRotate = globals.enableOrbitControls;
-  globals.orbitControls.enablePan    = globals.enableOrbitControls;
+  // controls
+  globals.orbitControls.enableZoom   = globals.options.enableOrbitControls;
+  globals.orbitControls.enableRotate = globals.options.enableOrbitControls;
+  globals.orbitControls.enablePan    = globals.options.enableOrbitControls;
 
+  // camera stuff
+  switch(globals.options.activeCamera){
+    case 'editor':
+      globals.mainCamera = globals.editorCamera;
+      globals.orbitControls.object = globals.editorCamera;
+      break;
+    case 'game':
+      globals.mainCamera = globals.gameCamera;
+      globals.orbitControls.object = globals.gameCamera;
+      break;
+  }
 }
 
 // Main render loop
@@ -162,8 +179,9 @@ function setupGameObjects() {
 
   // dat gui
   const gui = new GUI({width: 250});
-  gui.add( globals, 'enableOrbitControls').name('enable orbit controls');
+  gui.add( globals.options, 'enableOrbitControls').name('enable orbit controls');
   gui.add( globals.gameOptions, 'enableInputStrokes').name('enable input');
+  gui.add( globals.options, 'activeCamera', [ 'editor', 'game' ] );
 
   // kanji game specific stuff
   const KanjiManagerGo = globals.gameObjectManager.createGameObject(
