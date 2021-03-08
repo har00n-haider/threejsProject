@@ -29,10 +29,12 @@ class KanjiManager extends Component {
     }
   
     genKanji = (kanjiPath) => {
+        // want to have all kanji just infront of the cam
         const KanjiGo = globals.gameObjectManager.createGameObject(
-            this.gameObject.transform,
+            globals.mainCamera,
             'Kanji',
         );
+        KanjiGo.transform.position.z -= 0.2;
         const kanji = KanjiGo.addComponent(Kanji, kanjiPath)
         kanji.completedEvent.regCb(this.handleKanjiCompleted);
         return kanji;

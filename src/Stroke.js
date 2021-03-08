@@ -3,6 +3,7 @@ import * as THREE from '../lib/three.module.js';
 import globals from "../lib/gameEngine/Globals.js";
 import * as ku from './KanjiUtility.js';
 import ResourceTracker from '../lib/gameEngine/utils/ResourceTracker.js';
+import {getBox} from '../lib/gameEngine/utils/Utils.js'; 
 
 class Stroke extends Component {
   constructor(gameObject) {
@@ -52,12 +53,15 @@ class Stroke extends Component {
       const positions = line.object3d.geometry.attributes.position.array;
       const camera = globals.mainCamera;
       const curPos = globals.inputManager.pointerPos;
+
+      // unproject then apply inverse camera tranform (attached to cam)
       const wldPos = (new THREE.Vector3()).set(
           curPos.x,
           curPos.y,
           -1
-      ).unproject( camera );
-      
+      ).unproject( camera ).applyMatrix4(camera.matrixWorldInverse);
+    
+
       // getting the total distance of line
       if(line.lastPnt != undefined){
         const diffVec = (new THREE.Vector2()).add(wldPos).sub(line.lastPnt);
@@ -68,7 +72,7 @@ class Stroke extends Component {
       
       positions[line.posIdx++] = wldPos.x ;
       positions[line.posIdx++] = wldPos.y ;
-      positions[line.posIdx++] = 0;
+      positions[line.posIdx++] = wldPos.z ;
       if((line.drawCount + 1 ) < line.maxPoints){
         line.drawCount++;
       }

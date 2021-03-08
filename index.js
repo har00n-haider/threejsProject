@@ -164,6 +164,9 @@ function render(curTimeMilliSec) {
   globals.lastTimeMilliSec = curTimeMilliSec;
 
   updateOptions();
+  //TODO: rename to mainCamera helper?
+  // include in a debug/editor object
+  globals.gameCameraHelper.update();
   globals.debugger.update();
   globals.gameObjectManager.update();
   globals.renderer.render(globals.scene, globals.mainCamera);
