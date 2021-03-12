@@ -37,7 +37,7 @@ function getMeshLineFromPnts( pnts ) {
 }
 
 /**
- * 
+ * P = (1−t)3P1 + 3(1−t)2tP2 +3(1−t)t2P3 + t3P4
  * @param {*} t must be a value from 0 - 1
  * @param {*} cB 
  */
@@ -49,6 +49,20 @@ function getPntOnCubicBezier(t, cB){
     const term4 = new THREE.Vector2().add(cB.p4).multiplyScalar(t*t*t);
     const r = new THREE.Vector2().add(term1).add(term2).add(term3).add(term4);
     return r;
+}
+
+/**
+ * P = (1−t)2P1 + 2(1−t)tP2 + t2P3
+ * @param {*} t must be a value from 0 - 1
+ * @param {*} qB 
+ */
+ function getPntOnQuadBezier(t, qB){
+  var ti = 1 - t;
+  const term1 = new THREE.Vector2().add(qB.p1).multiplyScalar(ti*ti)
+  const term2 = new THREE.Vector2().add(qB.p2).multiplyScalar(2*ti*t) 
+  const term3 = new THREE.Vector2().add(qB.p3).multiplyScalar(t*t);
+  const r = new THREE.Vector2().add(term1).add(term2).add(term3);
+  return r;
 }
 
 function getPntsOnCubicBezier(cB, noOfPnts){
@@ -156,5 +170,6 @@ export{
     addRefPntsToScene,
     genRefPntsForPnts as genRefPntsForLine,
     getLengthOfCubicBezier,
-    genPntsForVectorPaths
+    genPntsForVectorPaths,
+    getPntOnQuadBezier
 }
