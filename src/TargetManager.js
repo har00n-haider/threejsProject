@@ -19,7 +19,7 @@ class TargetManager extends Component {
       this.timerS += globals.deltaTimeMillSec / 1000;
     }
     else{
-      this.genTarget(this.getRandomTargetParams());
+      this.genTarget();
       this.timerS = 0;
     }
   }
@@ -28,40 +28,12 @@ class TargetManager extends Component {
     this.resTracker.dispose();
   }
 
-  getRandomTargetParams = () => {
-    // definition
-    const params = {
-      rotRate : globals.gameOptions.targetManagerOptions.rotRate,
-      speed : globals.gameOptions.targetManagerOptions.speed,
-      qB: {
-        p1: undefined,
-        p2: undefined,
-        p3: undefined,
-      }
-    }
-
-    const maxX = 6;
-    const minX = 0
-    const maxY = 15;
-    const minY = 5;
-
-    const pnt1 = new THREE.Vector2(rand(minX, maxX), 0);
-    const pnt3 = new THREE.Vector2(rand(pnt1.x, maxX), 0);
-    const pnt2 = new THREE.Vector2(rand(pnt1.x, pnt3.x), rand(minY, maxY));
-
-    params.qB.p1 = pnt1;
-    params.qB.p2 = pnt2;
-    params.qB.p3 = pnt3;
-
-    return params;
-  }
-
-  genTarget = (targetParams) => {
+  genTarget = () => {
     const targetGo = globals.gameObjectManager.createGameObject(
         this.gameObject.transform,
         'Target',
     );
-    const target = targetGo.addComponent(Target, targetParams);
+    const target = targetGo.addComponent(Target);
     return target;
   }  
 
