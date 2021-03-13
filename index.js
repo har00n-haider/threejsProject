@@ -135,8 +135,8 @@ function setupGui(){
   g1.open();
   if(globals.gameOptions != undefined){
     var f1 = gui.addFolder('Game options');
-    f1.add(globals.gameOptions.targetManagerOptions, 'speed').min(0).max(2).step(0.05);
-    f1.add(globals.gameOptions.targetManagerOptions, 'rotRate').min(0).max(0.5).step(0.01);
+    // f1.add(globals.gameOptions.targetManagerOptions, 'speed').min(0).max(2).step(0.05);
+    // f1.add(globals.gameOptions.targetManagerOptions, 'rotRate').min(0).max(0.5).step(0.01);
     f1.open();
   }
   gui.open();

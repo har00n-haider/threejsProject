@@ -4,6 +4,8 @@ import globals from "../lib/gameEngine/Globals.js";
 import * as ku from './KanjiUtility.js';
 import ResourceTracker from '../lib/gameEngine/utils/ResourceTracker.js';
 import * as Utils from '../lib/gameEngine/utils/Utils.js';
+import Explosion from "./Explosion.js";
+import ParticleSystem from './ParticleSystem.js';
 
 class Target extends Component {
   constructor(gameObject) {
@@ -23,6 +25,51 @@ class Target extends Component {
   }
 
   update = () => {
+    this.hitCheck();
+    this.moveTarget();
+  }
+
+  destroy = () => {
+    if(!this.markedForDestruction){
+      this.resTracker.dispose();
+      //TODO: this type of stuff should be in the gameObject definition
+      // for destroy so you could call super.destroy() 
+      this.gameObject.parent.remove(this.gameObject.transform);
+      globals.gameObjectManager.removeGameObject(this.gameObject);
+      this.markedForDestruction = true;
+    }
+  }
+
+  startExplosion = () => {
+    const explosionGo = globals.gameObjectManager.createGameObject(
+      globals.scene,
+      'ExplosionSystem',
+    );
+    explosionGo.transform.position.set(
+      this.targetBox.position.x,
+      this.targetBox.position.y,
+      this.targetBox.position.z,
+    );
+    explosionGo.addComponent(ParticleSystem);
+    explosionGo.addComponent(Explosion);
+  }
+
+  hitCheck = () => {
+    if(globals.inputManager.pointerIsDown){
+      const pointerPos = globals.inputManager.pointerPos;
+      // console.log("click happened event data at : " + mousePos.x + ", " + mousePos.y);
+      const raycaster = new THREE.Raycaster();
+      raycaster.setFromCamera( pointerPos, globals.mainCamera );
+      const intersects = raycaster.intersectObjects( [this.targetBox] );
+      if (intersects.length > 0)
+      {
+        this.startExplosion();
+        this.destroy();
+      }
+    }
+  }
+
+  moveTarget = () => {
     const pnt2d = ku.getPntOnQuadBezier(this.t, this.qB)
     this.targetBox.position.set(pnt2d.x, pnt2d.y, 0);
     this.targetBox.rotation.x += this.rotRate;
@@ -38,14 +85,6 @@ class Target extends Component {
     else{
       this.destroy();
     }
-  }
-
-  destroy = () => {
-    this.resTracker.dispose();
-    //TODO: this type of stuff should be in the gameObject definition
-    // for destroy so you could call super.destroy() 
-    this.gameObject.parent.remove(this.gameObject.transform);
-    globals.gameObjectManager.removeGameObject(this.gameObject);
   }
 
   getRandomTargetParams = () => {
@@ -87,7 +126,6 @@ class Target extends Component {
 
     return params;
   }
-
 }
 
 export default Target;
