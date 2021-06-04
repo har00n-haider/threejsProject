@@ -13,12 +13,14 @@ import AudioManager from './lib/gameEngine/utils/AudioManager.js';
 import * as Utils from './lib/gameEngine/utils/Utils.js';
 // Project specific stuff
 
+
 //#region Game engine stuff
 
 // Initial setup of scene, camera and lights
 function initialise() {
   // canvas setup
   const canvas = document.querySelector('canvas');
+  globals.canvas = canvas;
   globals.renderer = new THREE.WebGLRenderer({
     canvas,
     antialias: true,
@@ -29,23 +31,24 @@ function initialise() {
   globals.renderer.setSize(window.innerWidth, window.innerHeight, true);
   window.addEventListener('resize', () => {
     onCanvasResize();
-  }, false);
-
-  // camera
-  const fov = 60;
-  const aspect = window.innerWidth / window.innerHeight;
-  const near = 0.1;
-  const far = 1000;
-  const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-  globals.canvas = canvas;
-  globals.mainCamera = camera;
-  camera.position.set(0, 5, 10);
-  camera.lookAt(new THREE.Vector3(0, 0, 0));
+  }, false)
 
   // scene
   const scene = new THREE.Scene();
+  scene.background = new THREE.Color(globals.options.sceneBg);
   globals.scene = scene;
-  scene.background = new THREE.Color('#B19CD9');
+
+  // cameras
+  // adding to scene so nested child transforms are visible 
+  globals.gameCamera = getOrthCamera();
+  globals.editorCamera = getPerspectiveCamera();
+  globals.scene.add(globals.gameCamera );
+  globals.scene.add(globals.editorCamera );
+  globals.mainCamera = globals.gameCamera;
+  globals.gameCameraHelper = new THREE.CameraHelper(globals.gameCamera);
+  globals.gameCameraHelper.name = 'gameCameraHelper';
+  globals.gameCameraHelper.visible = globals.options.enableGameCameraHelper;
+  globals.scene.add(globals.gameCameraHelper);
 
   // lights
   function addLight(...pos) {
@@ -72,38 +75,115 @@ function initialise() {
   addLight(5, 5, 2);
   addLight(-5, 5, 5);
 
-  // // sky box
-  // const loader = new THREE.CubeTextureLoader();
-  // const texture = loader.load([
-  //     './resources/posx.jpg',
-  //     './resources/negx.jpg',
-  //     './resources/posy.jpg',
-  //     './resources/negy.jpg',
-  //     './resources/posz.jpg',
-  //     './resources/negz.jpg',
-  // ]);
-  // this._scene.background = texture;
+}
+
+function getPerspectiveCamera(camPos = new THREE.Vector3(3, 3, 3)){
+  const fov = 60;
+  const aspect = window.innerWidth / window.innerHeight;
+  const near = 0.1;
+  const far = 1000;
+  const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+  camera.position.set(camPos.x, camPos.y, camPos.z);
+  return camera; 
+}
+
+function getOrthCamera(camPos = new THREE.Vector3(3, 3, 3), orthoSize = 8){
+  globals.orthoSize = orthoSize;
+  const aspect = window.innerWidth / window.innerHeight;
+  const near = 0.1;
+  const far = 1000;
+  const camera = new THREE.OrthographicCamera( 
+    globals.orthoSize * aspect / - 2, 
+    globals.orthoSize * aspect / 2, 
+    globals.orthoSize / 2, 
+    globals.orthoSize / - 2, 
+    near,
+    far );
+  camera.position.set(camPos.x, camPos.y, camPos.z);
+  return camera;
+}
+
+function updateOrthCamera(camera){
+  const aspect = window.innerWidth / window.innerHeight;
+  camera.left   = globals.orthoSize * aspect / - 2; 
+  camera.right  = globals.orthoSize * aspect / 2;
+  camera.top    = globals.orthoSize / 2;
+  camera.bottom = globals.orthoSize / - 2;
 }
 
 function onCanvasResize() {
-  globals.mainCamera.aspect = window.innerWidth / window.innerHeight;
+  if(globals.mainCamera.isOrthographicCamera){
+    updateOrthCamera(globals.mainCamera);
+  }
+  if(globals.mainCamera.isPerspectiveCamera){
+    globals.mainCamera.aspect = window.innerWidth / window.innerHeight;
+  }
   globals.mainCamera.updateProjectionMatrix();
   globals.renderer.setSize(window.innerWidth, window.innerHeight, false);
+}
+
+function setupGui(){
+  const gui = new GUI({width: 250});
+  var g1 = gui.addFolder('Engine options');
+  g1.add( globals.options, 'enableOrbitControls').name('enable orbit controls');
+  g1.add( globals.options, 'activeCamera', [ 'editor', 'game' ] );
+  g1.addColor( globals.options, 'sceneBg');
+  g1.add( globals.options, 'enableGameCameraHelper');
+  g1.add( globals.options, 'debugStats');
+  g1.open();
+  if(globals.gameOptions != undefined){
+    var f1 = gui.addFolder('Game options');
+    // f1.add(globals.gameOptions.targetManagerOptions, 'speed').min(0).max(2).step(0.05);
+    // f1.add(globals.gameOptions.targetManagerOptions, 'rotRate').min(0).max(0.5).step(0.01);
+    f1.open();
+  }
+  gui.open();
+}
+
+function updateOptions(){
+  // camera stuff
+  switch(globals.options.activeCamera){
+    case 'editor':
+      globals.mainCamera = globals.editorCamera;
+      break;
+    case 'game':
+      globals.mainCamera = globals.gameCamera;
+      break;
+  }
+  globals.gameCameraHelper.visible = globals.options.enableGameCameraHelper;
+  
+  // controls
+  globals.orbitControls.enableZoom   = globals.options.enableOrbitControls;
+  globals.orbitControls.enableRotate = globals.options.enableOrbitControls;
+  globals.orbitControls.enablePan    = globals.options.enableOrbitControls;
+  globals.orbitControls.object       = globals.mainCamera;
+
+  globals.scene.background = new THREE.Color(globals.options.sceneBg);
+
+  if(globals.options.debugStats){
+    document.getElementById("debugWrapper").style.visibility = "visible";
+  }
+  else{
+    document.getElementById("debugWrapper").style.visibility = "hidden";
+  }
+
 }
 
 // Main render loop
 function render(curTimeMilliSec) {
   // timing
   globals.timeMilliSec = curTimeMilliSec;
-  if (globals.lastTimeMilliSec === null) {
+  if (globals.lastTimeMilliSec === undefined) {
     globals.lastTimeMilliSec = curTimeMilliSec;
   }
   globals.deltaTimeMillSec = curTimeMilliSec - globals.lastTimeMilliSec;
   globals.lastTimeMilliSec = curTimeMilliSec;
 
+  updateOptions();
+  //TODO: rename to mainCamera helper?
+  // include in a debug/editor object
+  globals.gameCameraHelper.update();
   globals.debugger.update();
-  // TODO: does this need tp be in here?
-  globals.orbitControls.update();
   globals.gameObjectManager.update();
   globals.renderer.render(globals.scene, globals.mainCamera);
   requestAnimationFrame(render);
@@ -115,28 +195,30 @@ function setupGameObjects() {
 
   // grid
   const grid = new InfiniteGridHelper(0.5, 100, new THREE.Color('white'), 100);
+  grid.name = 'EditorGrid';
   globals.scene.add(grid);
 
-  // controls
+  // default orbit controls
   globals.orbitControls = new OrbitControls(
     globals.mainCamera,
     globals.renderer.domElement,
   );
+  globals.orbitControls.target.set(3, 3, 0);
+  globals.orbitControls.update();
 
   // debug axes
   const axes = new THREE.AxesHelper(5);
+  axes.name = 'EditorAxes';
   globals.scene.add(axes);
-
-  // Initialise game objects
-  globals.gameObjectManager = new GameObjectManager();
+  
+  // initialise game objects
   globals.inputManager = new InputManager(globals.renderer.domElement);
+  globals.gameObjectManager = new GameObjectManager();
   globals.debugger = new Debugger(globals, document.getElementById('debugWrapper'));
+  
+  // dat gui
+  setupGui();
 
-}
-
-function setupDatGUI(){
-  const gui = new GUI();
-  gui.add(globals, 'shit', 0, 0.5).name('something');
 }
 
 //#endregion 

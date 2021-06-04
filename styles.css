@@ -1,7 +1,13 @@
 * {
-  /*remove default padding added by borwser*/
+  /*remove default padding added by browser*/
   margin: 0;
   padding: 0;
+}
+html, body {
+  /* disables the swipe to change page on some browsers */
+  overscroll-behavior-x: none;
+  /* disables webpage dragging on mobile devices */
+  overflow: hidden;
 }
 #threeCanvas {
   /*should not need to do this*/
@@ -10,9 +16,12 @@
   margin: 0;
   padding: 0;
   display: block;
+  /*required to stop the browser from cancel touch events*/
+  touch-action: none ;
 }
 #debugWrapper {
-  font-size: 15px;
+  font-size: 12px;
+  font-family: Verdana, sans-serif;
   pointer-events: none;
   position: absolute; 
   left: 10px;
